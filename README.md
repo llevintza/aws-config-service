@@ -36,6 +36,8 @@ GET /config/tenant1/cloud/us-east-1/service/api-gateway/config/rate-limit
 
 ### Local Development
 
+**📋 For detailed service management instructions, see [SERVICE_MANAGEMENT.md](./SERVICE_MANAGEMENT.md)**
+
 1. **Setup the project:**
    ```bash
    ./setup.sh
@@ -61,6 +63,16 @@ GET /config/tenant1/cloud/us-east-1/service/api-gateway/config/rate-limit
    ```bash
    yarn start:dev
    ```
+
+**Stopping the service:**
+```bash
+# Graceful shutdown (recommended)
+Ctrl+C  # if running in foreground
+yarn stop  # if running in background
+
+# Check service status
+yarn status
+```
 
 ### Docker
 
@@ -118,6 +130,9 @@ Example response:
 ```
 ├── src/
 │   ├── server.ts              # Main server file
+│   ├── plugins/
+│   │   ├── swagger.ts         # Swagger documentation configuration
+│   │   └── swagger-ui.ts      # Swagger UI configuration
 │   ├── routes/
 │   │   ├── index.ts           # Route registration helper
 │   │   ├── config.ts          # Configuration routes
@@ -133,7 +148,8 @@ Example response:
 ├── nodemon.json               # Nodemon configuration for hot reload
 ├── Dockerfile
 ├── docker-compose.yml
-└── setup.sh                   # Setup script
+├── setup.sh                   # Setup script
+└── SERVICE_MANAGEMENT.md      # Detailed service management guide
 ```
 
 ## Available Scripts
@@ -144,9 +160,18 @@ Example response:
 - `yarn build:watch` - Build TypeScript in watch mode
 - `yarn start` - Start the compiled application
 - `yarn start:dev` - Build and start (useful for testing production build locally)
+- `yarn stop` - Gracefully stop the running service
+- `yarn stop:force` - Force stop the service (if graceful stop fails)
+- `yarn restart` - Restart the service
+- `yarn restart:dev` - Restart in development mode
+- `yarn status` - Check if service is running
+- `yarn port:check` - Check what's using port 3000
+- `yarn port:free` - Free up port 3000
 - `yarn lint` - Lint TypeScript files
 - `yarn lint:fix` - Fix linting issues
 - `yarn docker:build` - Build Docker image
 - `yarn docker:run` - Run Docker container
 - `yarn docker:up` - Build and run with Docker Compose
-- `yarn docker:down` - Stop Docker Compose services 
+- `yarn docker:down` - Stop Docker Compose services
+- `yarn docker:stop` - Stop Docker services without removing
+- `yarn docker:restart` - Restart Docker services 

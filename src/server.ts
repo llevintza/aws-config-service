@@ -1,9 +1,9 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import swagger from '@fastify/swagger';
-import swaggerUi from '@fastify/swagger-ui';
 import { configRoutes } from './routes/config';
 import { healthRoutes } from './routes/health';
+import { registerSwagger } from './plugins/swagger';
+import { registerSwaggerUI } from './plugins/swagger-ui';
 
 const server = Fastify({
   logger: {
@@ -26,56 +26,11 @@ const start = async (): Promise<void> => {
       origin: true
     });
 
-    // Register Swagger
-    await server.register(swagger, {
-      swagger: {
-        info: {
-          title: 'AWS Config Service API',
-          description: 'A REST API service for loading configurations by tenant, cloud region, and service',
-          version: '1.0.0',
-          contact: {
-            name: 'AWS Config Service Team',
-            email: 'support@aws-config-service.com'
-          }
-        },
-        host: 'localhost:3000',
-        schemes: ['http', 'https'],
-        consumes: ['application/json'],
-        produces: ['application/json'],
-        tags: [
-          { 
-            name: 'config', 
-            description: 'Configuration management endpoints for tenants, cloud regions, and services' 
-          },
-          { 
-            name: 'system', 
-            description: 'System health and monitoring endpoints' 
-          }
-        ],
-        securityDefinitions: {
-          apiKey: {
-            type: 'apiKey',
-            name: 'apikey',
-            in: 'header'
-          }
-        }
-      }
-    });
+    // Register Swagger documentation
+    await registerSwagger(server);
 
     // Register Swagger UI
-    await server.register(swaggerUi, {
-      routePrefix: '/docs',
-      uiConfig: {
-        docExpansion: 'list',
-        deepLinking: true,
-        defaultModelsExpandDepth: 1,
-        defaultModelExpandDepth: 1,
-        displayRequestDuration: true,
-        tryItOutEnabled: true
-      },
-      staticCSP: true,
-      transformSpecificationClone: true
-    });
+    await registerSwaggerUI(server);
 
     // Register all route modules individually
     await server.register(healthRoutes);
@@ -99,15 +54,34 @@ const start = async (): Promise<void> => {
 };
 
 // Handle graceful shutdown
-process.on('SIGINT', async () => {
+const gracefulShutdown = async (signal: string): Promise<void> => {
+  server.log.info(`Received ${signal}, starting graceful shutdown...`);
   try {
+    // Stop accepting new connections
     await server.close();
-    server.log.info('Server closed gracefully');
+    server.log.info('✅ Server closed gracefully');
+    server.log.info('👋 AWS Config Service shutdown complete');
     process.exit(0);
   } catch (err) {
-    server.log.error('Error during graceful shutdown:', err);
+    server.log.error('❌ Error during graceful shutdown:', err);
     process.exit(1);
   }
+};
+
+// Register signal handlers for graceful shutdown
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  server.log.fatal('Uncaught Exception:', err);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  server.log.fatal('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
 
 start();
