@@ -13,18 +13,18 @@ export async function registerSwaggerUI(fastify: FastifyInstance): Promise<void>
       tryItOutEnabled: true,
       filter: true,
       showExtensions: true,
-      showCommonExtensions: true
+      showCommonExtensions: true,
     },
     uiHooks: {
       onRequest: function (request, reply, next) {
         // Add any custom logic before serving Swagger UI
         next();
-      }
+      },
     },
     staticCSP: true,
     transformSpecificationClone: true,
     theme: {
-      title: 'AWS Config Service API Documentation'
-    }
+      title: 'AWS Config Service API Documentation',
+    },
   });
 }

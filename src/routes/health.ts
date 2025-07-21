@@ -17,19 +17,19 @@ export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
               timestamp: { type: 'string' },
               uptime: { type: 'number' },
               version: { type: 'string' },
-              message: { type: 'string' }
-            }
-          }
-        }
-      }
+              message: { type: 'string' },
+            },
+          },
+        },
+      },
     },
-    async (request: FastifyRequest, reply: FastifyReply) => {
+    async (_request: FastifyRequest, _reply: FastifyReply) => {
       return {
         status: 'healthy',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         version: process.env.npm_package_version || '1.0.0',
-        message: 'Service is running smoothly! 🎉'
+        message: 'Service is running smoothly! 🎉',
       };
     }
   );
@@ -44,12 +44,12 @@ export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
         response: {
           302: {
             description: 'Redirect to Swagger UI',
-            type: 'null'
-          }
-        }
-      }
+            type: 'null',
+          },
+        },
+      },
     },
-    async (request: FastifyRequest, reply: FastifyReply) => {
+    async (_request: FastifyRequest, reply: FastifyReply) => {
       reply.redirect('/docs');
     }
   );

@@ -13,17 +13,17 @@ const server = Fastify({
       options: {
         colorize: true,
         translateTime: 'HH:MM:ss Z',
-        ignore: 'pid,hostname'
-      }
-    }
-  }
+        ignore: 'pid,hostname',
+      },
+    },
+  },
 });
 
 const start = async (): Promise<void> => {
   try {
     // Register CORS
     await server.register(cors, {
-      origin: true
+      origin: true,
     });
 
     // Register Swagger documentation
@@ -40,13 +40,21 @@ const start = async (): Promise<void> => {
     const host = process.env.HOST || '0.0.0.0';
 
     await server.listen({ port, host });
-    
+
     // Enhanced startup logging
     server.log.info(`🚀 AWS Config Service started successfully!`);
-    server.log.info(`📖 API Documentation: http://${host === '0.0.0.0' ? 'localhost' : host}:${port}/docs`);
-    server.log.info(`❤️  Health Check: http://${host === '0.0.0.0' ? 'localhost' : host}:${port}/health`);
-    server.log.info(`🔧 Example Config: http://${host === '0.0.0.0' ? 'localhost' : host}:${port}/config/tenant1/cloud/us-east-1/service/api-gateway/config/rate-limit`);
-    server.log.info(`🌐 Root URL: http://${host === '0.0.0.0' ? 'localhost' : host}:${port} (redirects to docs)`);
+    server.log.info(
+      `📖 API Documentation: http://${host === '0.0.0.0' ? 'localhost' : host}:${port}/docs`
+    );
+    server.log.info(
+      `❤️  Health Check: http://${host === '0.0.0.0' ? 'localhost' : host}:${port}/health`
+    );
+    server.log.info(
+      `🔧 Example Config: http://${host === '0.0.0.0' ? 'localhost' : host}:${port}/config/tenant1/cloud/us-east-1/service/api-gateway/config/rate-limit`
+    );
+    server.log.info(
+      `🌐 Root URL: http://${host === '0.0.0.0' ? 'localhost' : host}:${port} (redirects to docs)`
+    );
   } catch (err) {
     server.log.error(err);
     process.exit(1);

@@ -14,16 +14,19 @@ A simple but optimized REST API service that loads configurations for tenant, en
 ## API Endpoints
 
 ### Configuration Endpoint
+
 ```
 GET /config/{tenant}/cloud/{cloudRegion}/service/{service}/config/{configName}
 ```
 
 Example:
+
 ```
 GET /config/tenant1/cloud/us-east-1/service/api-gateway/config/rate-limit
 ```
 
 ### Additional Endpoints
+
 - `GET /health` - Health check
 - `GET /config` - List all configurations
 - `GET /docs` - Swagger UI documentation
@@ -31,6 +34,7 @@ GET /config/tenant1/cloud/us-east-1/service/api-gateway/config/rate-limit
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - Yarn package manager
 
@@ -39,21 +43,25 @@ GET /config/tenant1/cloud/us-east-1/service/api-gateway/config/rate-limit
 **📋 For detailed service management instructions, see [SERVICE_MANAGEMENT.md](./SERVICE_MANAGEMENT.md)**
 
 1. **Setup the project:**
+
    ```bash
    ./setup.sh
    ```
 
 2. **Run in development mode (with hot reload):**
+
    ```bash
    yarn dev
    ```
 
 3. **Run in development mode (with TypeScript watch and auto-restart):**
+
    ```bash
    yarn dev:watch
    ```
 
 4. **Run in production mode:**
+
    ```bash
    yarn build
    yarn start
@@ -65,6 +73,7 @@ GET /config/tenant1/cloud/us-east-1/service/api-gateway/config/rate-limit
    ```
 
 **Stopping the service:**
+
 ```bash
 # Graceful shutdown (recommended)
 Ctrl+C  # if running in foreground
@@ -77,11 +86,13 @@ yarn status
 ### Docker
 
 1. **Build and run with Docker Compose:**
+
    ```bash
    yarn docker:up
    ```
 
 2. **Build Docker image manually:**
+
    ```bash
    yarn docker:build
    ```
@@ -110,6 +121,7 @@ The service reads configuration data from `data/configurations.json`. The struct
 - Multiple configurations per service
 
 Example response:
+
 ```json
 {
   "tenant": "tenant1",
@@ -174,4 +186,4 @@ Example response:
 - `yarn docker:up` - Build and run with Docker Compose
 - `yarn docker:down` - Stop Docker Compose services
 - `yarn docker:stop` - Stop Docker services without removing
-- `yarn docker:restart` - Restart Docker services 
+- `yarn docker:restart` - Restart Docker services

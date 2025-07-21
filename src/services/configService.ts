@@ -15,6 +15,7 @@ class ConfigService {
       const rawData = fs.readFileSync(configPath, 'utf-8');
       this.configData = JSON.parse(rawData);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error loading configuration data:', error);
       throw new Error('Failed to load configuration data');
     }
@@ -47,6 +48,7 @@ class ConfigService {
 
       return configData;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error retrieving configuration:', error);
       return null;
     }

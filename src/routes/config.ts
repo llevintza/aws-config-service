@@ -20,9 +20,12 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
         tenant: { type: 'string', description: 'Tenant identifier' },
         cloudRegion: { type: 'string', description: 'Cloud region (e.g., us-east-1, eu-west-1)' },
         service: { type: 'string', description: 'Service name (e.g., api-gateway, lambda)' },
-        configName: { type: 'string', description: 'Configuration name (e.g., rate-limit, timeout)' }
+        configName: {
+          type: 'string',
+          description: 'Configuration name (e.g., rate-limit, timeout)',
+        },
       },
-      required: ['tenant', 'cloudRegion', 'service', 'configName']
+      required: ['tenant', 'cloudRegion', 'service', 'configName'],
     },
     response: {
       200: {
@@ -38,11 +41,11 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
             properties: {
               value: { type: ['string', 'number'] },
               unit: { type: 'string' },
-              description: { type: 'string' }
-            }
+              description: { type: 'string' },
+            },
           },
-          found: { type: 'boolean' }
-        }
+          found: { type: 'boolean' },
+        },
       },
       404: {
         description: 'Configuration not found',
@@ -54,29 +57,32 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
           configName: { type: 'string' },
           config: { type: 'null' },
           found: { type: 'boolean' },
-          message: { type: 'string' }
-        }
-      }
-    }
+          message: { type: 'string' },
+        },
+      },
+    },
   };
 
   // GET /config/{tenant}/cloud/{cloudRegion}/service/{service}/config/{configName}
   fastify.get<{ Params: ConfigParams }>(
     '/config/:tenant/cloud/:cloudRegion/service/:service/config/:configName',
     { schema: configSchema },
-    async (request: FastifyRequest<{ Params: ConfigParams }>, reply: FastifyReply): Promise<ConfigResponse> => {
+    async (
+      request: FastifyRequest<{ Params: ConfigParams }>,
+      reply: FastifyReply
+    ): Promise<ConfigResponse> => {
       const { tenant, cloudRegion, service, configName } = request.params;
 
       const configRequest: ConfigRequest = {
         tenant,
         cloudRegion,
         service,
-        configName
+        configName,
       };
 
       try {
         const config = configService.getConfig(configRequest);
-        
+
         if (config) {
           const response: ConfigResponse = {
             tenant,
@@ -84,7 +90,7 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
             service,
             configName,
             config,
-            found: true
+            found: true,
           };
           return response;
         } else {
@@ -95,7 +101,7 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
             service,
             configName,
             config: null,
-            found: false
+            found: false,
           };
           return response;
         }
@@ -117,10 +123,10 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
         response: {
           200: {
             description: 'All configurations',
-            type: 'object'
-          }
-        }
-      }
+            type: 'object',
+          },
+        },
+      },
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
