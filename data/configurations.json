@@ -1,0 +1,82 @@
+{
+  "tenant1": {
+    "cloud": {
+      "us-east-1": {
+        "services": {
+          "api-gateway": {
+            "configs": {
+              "rate-limit": {
+                "value": 1000,
+                "unit": "requests/minute",
+                "description": "API Gateway rate limiting configuration"
+              },
+              "timeout": {
+                "value": 30,
+                "unit": "seconds",
+                "description": "API Gateway timeout configuration"
+              }
+            }
+          },
+          "lambda": {
+            "configs": {
+              "memory": {
+                "value": 512,
+                "unit": "MB",
+                "description": "Lambda memory allocation"
+              },
+              "timeout": {
+                "value": 15,
+                "unit": "seconds",
+                "description": "Lambda execution timeout"
+              }
+            }
+          }
+        }
+      },
+      "us-west-2": {
+        "services": {
+          "api-gateway": {
+            "configs": {
+              "rate-limit": {
+                "value": 800,
+                "unit": "requests/minute",
+                "description": "API Gateway rate limiting configuration for west region"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tenant2": {
+    "cloud": {
+      "eu-west-1": {
+        "services": {
+          "api-gateway": {
+            "configs": {
+              "rate-limit": {
+                "value": 1200,
+                "unit": "requests/minute",
+                "description": "API Gateway rate limiting for EU tenant"
+              }
+            }
+          },
+          "rds": {
+            "configs": {
+              "backup-retention": {
+                "value": 7,
+                "unit": "days",
+                "description": "RDS backup retention period"
+              },
+              "instance-class": {
+                "value": "db.t3.medium",
+                "unit": "instance-type",
+                "description": "RDS instance class"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+node_modules/
+dist/
+*.log
+.env
+.DS_Store
+coverage/
+.nyc_output/
+
+# Yarn
+yarn-error.log
+.yarn/
+.pnp.*
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Documentation
+README.md
+docs/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
