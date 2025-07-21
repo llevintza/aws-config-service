@@ -10,6 +10,10 @@ A simple but optimized REST API service that loads configurations for tenant, en
 - 📚 **Swagger** - API documentation and testing
 - 🔄 **Hot Reload** - Development mode with automatic restarts
 - ⚡ **Yarn** - Fast and reliable package management
+- 🎯 **Husky** - Git hooks for code quality
+- ✨ **ESLint** - Code linting and quality checks
+- 💅 **Prettier** - Automatic code formatting
+- 📋 **Commitlint** - Conventional commit message enforcement
 
 ## API Endpoints
 
@@ -179,6 +183,10 @@ Example response:
 - `yarn status` - Check if service is running
 - `yarn port:check` - Check what's using port 3000
 - `yarn port:free` - Free up port 3000
+- `yarn format` - Format code with Prettier
+- `yarn format:check` - Check if code is properly formatted
+- `yarn type-check` - Run TypeScript type checking
+- `yarn pre-commit` - Run pre-commit checks manually
 - `yarn lint` - Lint TypeScript files
 - `yarn lint:fix` - Fix linting issues
 - `yarn docker:build` - Build Docker image
