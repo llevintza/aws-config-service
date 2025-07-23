@@ -11,6 +11,10 @@
     "start:dev": "yarn build && yarn start",
     "dev": "ts-node-dev --respawn --transpile-only --clear --notify false src/server.ts",
     "dev:watch": "concurrently \"yarn build:watch\" \"nodemon dist/server.js\"",
+    "debug": "ts-node-dev --respawn --transpile-only --clear --notify false --inspect=9229 src/server.ts",
+    "debug:brk": "ts-node-dev --respawn --transpile-only --clear --notify false --inspect-brk=9229 src/server.ts",
+    "debug:compiled": "yarn build && node --inspect=9229 dist/server.js",
+    "debug:compiled:brk": "yarn build && node --inspect-brk=9229 dist/server.js",
     "stop": "pkill -TERM -f 'node dist/server.js' || echo 'No running server found'",
     "stop:force": "pkill -KILL -f 'node dist/server.js' || echo 'No running server found'",
     "restart": "yarn stop && sleep 2 && yarn start",
@@ -55,16 +59,16 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "fastify": "^4.24.3",
+    "@fastify/cors": "^8.4.0",
     "@fastify/swagger": "^8.12.0",
     "@fastify/swagger-ui": "^2.1.0",
-    "@fastify/cors": "^8.4.0",
-    "ajv": "^8.12.0"
+    "ajv": "^8.12.0",
+    "fastify": "^4.24.3"
   },
   "devDependencies": {
     "@commitlint/cli": "^18.4.3",
     "@commitlint/config-conventional": "^18.4.3",
-    "@types/node": "^20.10.4",
+    "@types/node": "24.1.0",
     "@typescript-eslint/eslint-plugin": "^6.13.1",
     "@typescript-eslint/parser": "^6.13.1",
     "concurrently": "^8.2.2",
@@ -74,6 +78,7 @@
     "nodemon": "^3.0.2",
     "pino-pretty": "^10.3.1",
     "prettier": "^3.1.0",
+    "ts-node": "10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.2"
   }

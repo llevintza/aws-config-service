@@ -1,0 +1,19 @@
+{
+  "typescript.preferences.includePackageJsonAutoImports": "auto",
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "debug.onTaskErrors": "showErrors",
+  "debug.openDebug": "openOnDebugBreak",
+  "debug.internalConsoleOptions": "openOnFirstSessionStart",
+  "debug.terminal.clearBeforeReusing": true,
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/.git/**": true
+  }
+}

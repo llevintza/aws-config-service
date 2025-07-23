@@ -44,7 +44,7 @@ GET /config/tenant1/cloud/us-east-1/service/api-gateway/config/rate-limit
 
 ### Local Development
 
-**📋 For detailed service management instructions, see [SERVICE_MANAGEMENT.md](./SERVICE_MANAGEMENT.md)**
+**📋 For detailed service management instructions, see [SERVICE_MANAGEMENT.md](./docs/SERVICE_MANAGEMENT.md)**
 
 1. **Setup the project:**
 
@@ -75,6 +75,40 @@ GET /config/tenant1/cloud/us-east-1/service/api-gateway/config/rate-limit
    ```bash
    yarn start:dev
    ```
+
+### 🐛 Debugging
+
+**📋 For detailed debugging instructions, see [DEBUGGING.md](./docs/DEBUGGING.md)**
+
+The project is fully configured for debugging with VS Code. You have several debugging options:
+
+#### Debug Scripts:
+
+- `yarn debug` - Debug TypeScript files directly with hot reload
+- `yarn debug:brk` - Debug with breakpoint on first line (waits for debugger)
+- `yarn debug:compiled` - Debug compiled JavaScript (faster startup)
+- `yarn debug:compiled:brk` - Debug compiled JS with initial breakpoint
+
+#### VS Code Debug Configurations:
+
+1. **Debug TypeScript App** - Debug TypeScript files directly
+2. **Debug Compiled JS** - Debug compiled JavaScript (with automatic build)
+3. **Attach to Running Process** - Attach to already running debug process
+4. **Debug with ts-node-dev** - Debug using ts-node-dev with hot reload
+
+#### How to Debug:
+
+1. **Set breakpoints** in your TypeScript files by clicking on the line numbers
+2. **Press F5** or go to Run & Debug panel and select a debug configuration
+3. **Use the debug console** to evaluate expressions and inspect variables
+4. **Step through code** using F10 (step over), F11 (step into), and F12 (step out)
+
+#### Debug Tips:
+
+- Source maps are enabled, so you can debug TypeScript files directly
+- Use `debugger;` statement in your code for programmatic breakpoints
+- The debugger will automatically restart when files change (with hot reload configs)
+- Check the Debug Console for output and use it to evaluate expressions
 
 **Stopping the service:**
 
@@ -159,13 +193,15 @@ Example response:
 │       └── config.ts          # TypeScript interfaces
 ├── data/
 │   └── configurations.json    # Configuration data
+├── docs/
+│   ├── DEBUGGING.md           # Debugging guide
+│   └── SERVICE_MANAGEMENT.md  # Detailed service management guide
 ├── package.json
 ├── tsconfig.json
 ├── nodemon.json               # Nodemon configuration for hot reload
 ├── Dockerfile
 ├── docker-compose.yml
-├── setup.sh                   # Setup script
-└── SERVICE_MANAGEMENT.md      # Detailed service management guide
+└── setup.sh                   # Setup script
 ```
 
 ## Available Scripts
