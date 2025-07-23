@@ -1,0 +1,39 @@
+{
+  "healthCheck": {
+    "description": "Health check endpoint",
+    "tags": ["system"],
+    "response": {
+      "200": {
+        "description": "Service is healthy",
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "uptime": {
+            "type": "number"
+          },
+          "version": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "rootRedirect": {
+    "description": "Root endpoint - redirects to Swagger UI documentation",
+    "tags": ["system"],
+    "response": {
+      "302": {
+        "description": "Redirect to Swagger UI",
+        "type": "null"
+      }
+    }
+  }
+}

@@ -1,28 +1,11 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import healthSchemas from '../schemas/health.json';
 
 export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
   // Health check endpoint
   fastify.get(
     '/health',
-    {
-      schema: {
-        description: 'Health check endpoint',
-        tags: ['system'],
-        response: {
-          200: {
-            description: 'Service is healthy',
-            type: 'object',
-            properties: {
-              status: { type: 'string' },
-              timestamp: { type: 'string' },
-              uptime: { type: 'number' },
-              version: { type: 'string' },
-              message: { type: 'string' },
-            },
-          },
-        },
-      },
-    },
+    { schema: healthSchemas.healthCheck },
     async (_request: FastifyRequest, _reply: FastifyReply) => {
       return {
         status: 'healthy',
@@ -37,18 +20,7 @@ export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
   // Root endpoint - redirect to Swagger UI
   fastify.get(
     '/',
-    {
-      schema: {
-        description: 'Root endpoint - redirects to Swagger UI documentation',
-        tags: ['system'],
-        response: {
-          302: {
-            description: 'Redirect to Swagger UI',
-            type: 'null',
-          },
-        },
-      },
-    },
+    { schema: healthSchemas.rootRedirect },
     async (_request: FastifyRequest, reply: FastifyReply) => {
       reply.redirect('/docs');
     }
