@@ -8,3 +8,11 @@ coverage/
 .husky/
 yarn.lock
 package-lock.json
+*.min.js
+*.min.css
+.DS_Store
+Thumbs.db
+*.map
+.cache/
+.tmp/
+temp/
