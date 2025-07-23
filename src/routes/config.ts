@@ -28,6 +28,17 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
         configName,
       };
 
+      // Use semantic logging for business logic
+      request.requestLogger.info('Processing config request', {
+        event: 'business.config.get',
+        config: {
+          tenant,
+          cloudRegion,
+          service,
+          configName,
+        },
+      });
+
       try {
         const config = configService.getConfig(configRequest);
 
@@ -40,6 +51,18 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
             config,
             found: true,
           };
+
+          request.requestLogger.info('Config found and returned', {
+            event: 'business.config.found',
+            config: {
+              tenant,
+              cloudRegion,
+              service,
+              configName,
+              hasValue: !!config,
+            },
+          });
+
           return response;
         } else {
           reply.code(404);
@@ -51,10 +74,35 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
             config: null,
             found: false,
           };
+
+          request.requestLogger.warn('Config not found', {
+            event: 'business.config.not_found',
+            config: {
+              tenant,
+              cloudRegion,
+              service,
+              configName,
+            },
+          });
+
           return response;
         }
       } catch (error) {
         request.log.error('Error retrieving configuration:', error);
+        request.requestLogger.error('Error retrieving configuration', {
+          event: 'business.config.error',
+          config: {
+            tenant,
+            cloudRegion,
+            service,
+            configName,
+          },
+          error: {
+            message: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined,
+          },
+        });
+
         reply.code(500);
         throw new Error('Internal server error while retrieving configuration');
       }
@@ -66,11 +114,31 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
     '/config',
     { schema: configSchemas.getAllConfigs },
     async (request: FastifyRequest, reply: FastifyReply) => {
+      request.requestLogger.info('Processing get all configs request', {
+        event: 'business.config.get_all',
+      });
+
       try {
         const allConfigs = configService.getAllConfigs();
+
+        request.requestLogger.info('All configs retrieved successfully', {
+          event: 'business.config.get_all.success',
+          result: {
+            configCount: Object.keys(allConfigs).length,
+          },
+        });
+
         return allConfigs;
       } catch (error) {
         request.log.error('Error retrieving all configurations:', error);
+        request.requestLogger.error('Error retrieving all configurations', {
+          event: 'business.config.get_all.error',
+          error: {
+            message: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined,
+          },
+        });
+
         reply.code(500);
         throw new Error('Internal server error while retrieving configurations');
       }
