@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { getConfigService } from '../container/DIContainer';
 import configSchemas from '../schemas/config.json';
-import { configService } from '../services/configService';
 import { ConfigRequest, ConfigResponse } from '../types/config';
 
 interface ConfigParams {
@@ -40,7 +40,8 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
       });
 
       try {
-        const config = configService.getConfig(configRequest);
+        const configService = getConfigService();
+        const config = await configService.getConfig(configRequest);
 
         if (config) {
           const response: ConfigResponse = {
@@ -119,7 +120,8 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
       });
 
       try {
-        const allConfigs = configService.getAllConfigs();
+        const configService = getConfigService();
+        const allConfigs = await configService.getAllConfigs();
 
         request.requestLogger.info('All configs retrieved successfully', {
           event: 'business.config.get_all.success',

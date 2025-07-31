@@ -1,27 +1,32 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { ConfigurationData, ConfigRequest, ConfigValue } from '../types/config';
+import { IConfigService } from '../interfaces/IConfigService';
+import { ConfigRequest, ConfigurationData, ConfigValue } from '../types/config';
 
-class ConfigService {
+/**
+ * File-based implementation of the configuration service
+ * Reads configuration data from a JSON file
+ */
+export class FileConfigService implements IConfigService {
   private configData!: ConfigurationData;
+  private readonly configPath: string;
 
-  constructor() {
+  constructor(configPath?: string) {
+    this.configPath = configPath || path.join(process.cwd(), 'data', 'configurations.json');
     this.loadConfigData();
   }
 
   private loadConfigData(): void {
     try {
-      const configPath = path.join(process.cwd(), 'data', 'configurations.json');
-      const rawData = fs.readFileSync(configPath, 'utf-8');
+      const rawData = fs.readFileSync(this.configPath, 'utf-8');
       this.configData = JSON.parse(rawData);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Error loading configuration data:', error);
-      throw new Error('Failed to load configuration data');
+      throw new Error(`Failed to load configuration data from ${this.configPath}`);
     }
   }
 
-  public getConfig(request: ConfigRequest): ConfigValue | null {
+  public async getConfig(request: ConfigRequest): Promise<ConfigValue | null> {
     try {
       const { tenant, cloudRegion, service, configName } = request;
 
@@ -48,26 +53,25 @@ class ConfigService {
 
       return configData;
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Error retrieving configuration:', error);
       return null;
     }
   }
 
-  public getAllConfigs(): ConfigurationData {
+  public async getAllConfigs(): Promise<ConfigurationData> {
     return this.configData;
   }
 
-  public getTenants(): string[] {
+  public async getTenants(): Promise<string[]> {
     return Object.keys(this.configData);
   }
 
-  public getCloudRegions(tenant: string): string[] {
+  public async getCloudRegions(tenant: string): Promise<string[]> {
     const tenantData = this.configData[tenant];
     return tenantData ? Object.keys(tenantData.cloud) : [];
   }
 
-  public getServices(tenant: string, cloudRegion: string): string[] {
+  public async getServices(tenant: string, cloudRegion: string): Promise<string[]> {
     const tenantData = this.configData[tenant];
     if (!tenantData) {
       return [];
@@ -77,7 +81,11 @@ class ConfigService {
     return cloudData ? Object.keys(cloudData.services) : [];
   }
 
-  public getConfigNames(tenant: string, cloudRegion: string, service: string): string[] {
+  public async getConfigNames(
+    tenant: string,
+    cloudRegion: string,
+    service: string
+  ): Promise<string[]> {
     const tenantData = this.configData[tenant];
     if (!tenantData) {
       return [];
@@ -92,10 +100,7 @@ class ConfigService {
     return serviceData ? Object.keys(serviceData.configs) : [];
   }
 
-  // Reload configuration data (useful for hot-reloading in development)
-  public reloadConfig(): void {
+  public async reloadConfig(): Promise<void> {
     this.loadConfigData();
   }
 }
-
-export const configService = new ConfigService();
