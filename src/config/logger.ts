@@ -39,7 +39,7 @@ const consoleFormat = winston.format.combine(
     if (metaKeys.length > 0) {
       // Format specific semantic fields nicely
       if (meta.http && typeof meta.http === 'object') {
-        const http = meta.http as any;
+        const http = meta.http;
         logMessage += `\n  HTTP: ${http.method} ${http.url}`;
         if (http.statusCode) {
           logMessage += ` → ${http.statusCode}`;
@@ -47,12 +47,12 @@ const consoleFormat = winston.format.combine(
       }
 
       if (meta.performance && typeof meta.performance === 'object') {
-        const perf = meta.performance as any;
+        const perf = meta.performance;
         logMessage += `\n  Performance: ${perf.responseTime}${perf.responseTimeUnit || 'ms'}`;
       }
 
       if (meta.client && typeof meta.client === 'object') {
-        const client = meta.client as any;
+        const client = meta.client;
         logMessage += `\n  Client: ${client.ip}`;
       }
 
