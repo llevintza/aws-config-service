@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
+
 import logger from '../config/logger';
-import { IConfigService } from '../interfaces/IConfigService';
-import { ConfigRequest, ConfigurationData, ConfigValue } from '../types/config';
+import type { IConfigService } from '../interfaces/IConfigService';
+import type { ConfigRequest, ConfigurationData, ConfigValue } from '../types/config';
 
 /**
  * File-based implementation of the configuration service

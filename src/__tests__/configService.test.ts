@@ -1,5 +1,5 @@
 import { MockConfigService } from '../testing/MockConfigService';
-import { ConfigRequest } from '../types/config';
+import type { ConfigRequest } from '../types/config';
 
 describe('MockConfigService', () => {
   let mockService: MockConfigService;

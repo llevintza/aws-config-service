@@ -1,7 +1,8 @@
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+
 import { getConfigService } from '../container/DIContainer';
 import configSchemas from '../schemas/config.json';
-import { ConfigRequest, ConfigResponse } from '../types/config';
+import type { ConfigRequest, ConfigResponse } from '../types/config';
 
 interface ConfigParams {
   tenant: string;

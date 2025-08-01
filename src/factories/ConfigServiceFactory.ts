@@ -1,5 +1,5 @@
 import logger from '../config/logger';
-import { IConfigService } from '../interfaces/IConfigService';
+import type { IConfigService } from '../interfaces/IConfigService';
 import { DynamoConfigService } from '../services/dynamoConfigService';
 import { FileConfigService } from '../services/fileConfigService';
 

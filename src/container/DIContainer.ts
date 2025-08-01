@@ -1,5 +1,5 @@
 import { ConfigServiceFactory } from '../factories/ConfigServiceFactory';
-import { IConfigService } from '../interfaces/IConfigService';
+import type { IConfigService } from '../interfaces/IConfigService';
 
 /**
  * Simple dependency injection container for managing configuration service instances

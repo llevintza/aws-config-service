@@ -2,8 +2,7 @@ import cors from '@fastify/cors';
 import Fastify from 'fastify';
 import logger from './config/logger';
 import { requestLoggingPlugin } from './plugins/request-logging';
-import { registerSwagger } from './plugins/swagger';
-import { registerSwaggerUI } from './plugins/swagger-ui';
+import { registerSwaggerCombined } from './plugins/swagger-combined';
 import { configRoutes } from './routes/config';
 import { healthRoutes } from './routes/health';
 
@@ -26,17 +25,21 @@ export function build() {
     },
   });
 
-  // Register plugins in the correct order (async registration)
-  server.register(async function (fastify) {
-    await fastify.register(cors, {
-      origin: true,
-    });
-    await fastify.register(requestLoggingPlugin);
-    await fastify.register(registerSwagger);
-    await fastify.register(registerSwaggerUI);
-    await fastify.register(healthRoutes);
-    await fastify.register(configRoutes);
+  // Register plugins and routes
+  // Register CORS
+  server.register(cors, {
+    origin: true,
   });
+
+  // Register logging
+  server.register(requestLoggingPlugin);
+
+  // Register swagger and swagger-ui together
+  server.register(registerSwaggerCombined);
+
+  // Register routes
+  server.register(healthRoutes);
+  server.register(configRoutes);
 
   return server;
 }

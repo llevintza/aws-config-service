@@ -1,4 +1,4 @@
-import { ConfigRequest, ConfigValue, ConfigurationData } from '../types/config';
+import type { ConfigRequest, ConfigValue, ConfigurationData } from '../types/config';
 
 /**
  * Interface defining the contract for configuration service implementations

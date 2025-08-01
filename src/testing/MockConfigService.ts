@@ -1,6 +1,6 @@
 import { DIContainer } from '../container/DIContainer';
-import { IConfigService } from '../interfaces/IConfigService';
-import { ConfigRequest, ConfigValue, ConfigurationData } from '../types/config';
+import type { IConfigService } from '../interfaces/IConfigService';
+import type { ConfigRequest, ConfigValue, ConfigurationData } from '../types/config';
 
 /**
  * Mock implementation of IConfigService for testing purposes

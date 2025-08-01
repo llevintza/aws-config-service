@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { ConfigurationData, ConfigRequest, ConfigValue } from '../types/config';
+
+import type { ConfigurationData, ConfigRequest, ConfigValue } from '../types/config';
 
 class ConfigService {
   private configData!: ConfigurationData;

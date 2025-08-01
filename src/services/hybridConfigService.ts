@@ -1,6 +1,6 @@
 import { getConfigService } from '../container/DIContainer';
-import { IConfigService } from '../interfaces/IConfigService';
-import { ConfigRequest, ConfigValue, ConfigurationData } from '../types/config';
+import type { IConfigService } from '../interfaces/IConfigService';
+import type { ConfigRequest, ConfigValue, ConfigurationData } from '../types/config';
 
 /**
  * Hybrid configuration service that delegates to the appropriate implementation
@@ -10,7 +10,7 @@ import { ConfigRequest, ConfigValue, ConfigurationData } from '../types/config';
  * Consider using getConfigService() directly from DIContainer for new code.
  */
 class HybridConfigService implements IConfigService {
-  private configService: IConfigService;
+  private readonly configService: IConfigService;
 
   constructor() {
     // Get the appropriate service instance through dependency injection

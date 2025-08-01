@@ -1,4 +1,5 @@
 import { pino, stdSerializers } from 'pino';
+
 import logger from './logger';
 
 // Create a custom Pino stream that forwards to Winston

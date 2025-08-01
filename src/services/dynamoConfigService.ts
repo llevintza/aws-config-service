@@ -6,19 +6,25 @@ import {
   QueryCommand,
   ScanCommand,
 } from '@aws-sdk/lib-dynamodb';
+
 import { dynamoDBConfig } from '../config/dynamodb';
 import logger from '../config/logger';
-import { IConfigService } from '../interfaces/IConfigService';
-import { ConfigRequest, ConfigurationData, ConfigValue, DynamoDBConfigItem } from '../types/config';
+import type { IConfigService } from '../interfaces/IConfigService';
+import type {
+  ConfigRequest,
+  ConfigurationData,
+  ConfigValue,
+  DynamoDBConfigItem,
+} from '../types/config';
 
 /**
  * DynamoDB-based implementation of the configuration service
  * Stores and retrieves configuration data from DynamoDB
  */
 export class DynamoConfigService implements IConfigService {
-  private client: DynamoDBClient;
-  private docClient: DynamoDBDocumentClient;
-  private tableName: string;
+  private readonly client: DynamoDBClient;
+  private readonly docClient: DynamoDBDocumentClient;
+  private readonly tableName: string;
 
   constructor() {
     this.client = new DynamoDBClient({

@@ -1,4 +1,5 @@
-import { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
+
 import { configRoutes } from './config';
 import { healthRoutes } from './health';
 
