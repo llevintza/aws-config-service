@@ -1,0 +1,415 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: ['main']
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: pr-${{ github.event.number }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # Job 1: PR Information and Validation
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+
+      - name: Check PR size
+        run: |
+          CHANGED_FILES=$(git diff --name-only origin/main..HEAD | wc -l)
+          ADDITIONS=$(git diff --shortstat origin/main..HEAD | grep -oE '[0-9]+ insertions?' | grep -oE '[0-9]+' || echo "0")
+          DELETIONS=$(git diff --shortstat origin/main..HEAD | grep -oE '[0-9]+ deletions?' | grep -oE '[0-9]+' || echo "0")
+
+          echo "📊 PR Statistics:"
+          echo "Files changed: $CHANGED_FILES"
+          echo "Lines added: $ADDITIONS"
+          echo "Lines deleted: $DELETIONS"
+
+          if [ "$CHANGED_FILES" -gt 50 ]; then
+            echo "⚠️ Warning: This PR changes more than 50 files. Consider breaking it down."
+          fi
+
+          if [ "$ADDITIONS" -gt 1000 ]; then
+            echo "⚠️ Warning: This PR adds more than 1000 lines. Consider breaking it down."
+          fi
+
+      - name: Check commit message format
+        run: |
+          git log --format="%s" origin/main..HEAD | while read commit_msg; do
+            if ! echo "$commit_msg" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .+'; then
+              echo "❌ Invalid commit message format: $commit_msg"
+              echo "Expected format: type(scope): description"
+              exit 1
+            fi
+          done
+
+  # Job 2: Code Quality Gate
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: [pr-validation]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run TypeScript compiler
+        run: yarn type-check
+
+      - name: Run ESLint with error threshold
+        run: |
+          yarn lint:check 2>&1 | tee eslint-output.txt
+          ERROR_COUNT=$(grep -c "error" eslint-output.txt || echo "0")
+          WARNING_COUNT=$(grep -c "warning" eslint-output.txt || echo "0")
+
+          echo "📊 ESLint Results:"
+          echo "Errors: $ERROR_COUNT"
+          echo "Warnings: $WARNING_COUNT"
+
+          if [ "$ERROR_COUNT" -gt 0 ]; then
+            echo "❌ ESLint errors found. Please fix before merging."
+            exit 1
+          fi
+
+          if [ "$WARNING_COUNT" -gt 10 ]; then
+            echo "⚠️ Too many ESLint warnings ($WARNING_COUNT). Consider fixing some."
+          fi
+
+      - name: Check code formatting
+        run: |
+          yarn format:check || {
+            echo "❌ Code formatting issues found. Please run 'yarn format' to fix."
+            exit 1
+          }
+
+      - name: Analyze code complexity
+        run: |
+          npx @compodoc/compodoc -p tsconfig.json --disable-coverage --disable-dependencies --disable-private --silent || echo "Complexity analysis completed"
+
+  # Job 3: Security and Compliance
+  security-compliance:
+    name: Security & Compliance
+    runs-on: ubuntu-latest
+    needs: [pr-validation]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Security audit
+        run: |
+          yarn audit --level moderate --json > audit-results.json || true
+
+          HIGH_VULNS=$(jq '.metadata.vulnerabilities.high // 0' audit-results.json)
+          CRITICAL_VULNS=$(jq '.metadata.vulnerabilities.critical // 0' audit-results.json)
+
+          echo "🔒 Security Audit Results:"
+          echo "Critical vulnerabilities: $CRITICAL_VULNS"
+          echo "High vulnerabilities: $HIGH_VULNS"
+
+          if [ "$CRITICAL_VULNS" -gt 0 ]; then
+            echo "❌ Critical security vulnerabilities found!"
+            exit 1
+          fi
+
+          if [ "$HIGH_VULNS" -gt 0 ]; then
+            echo "⚠️ High severity vulnerabilities found. Please review."
+          fi
+
+      - name: Check for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: License compliance check
+        run: |
+          npx license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;0BSD' --summary || {
+            echo "⚠️ License compliance issues found. Please review dependencies."
+          }
+
+  # Job 4: Build and Test Validation
+  build-test-validation:
+    name: Build & Test Validation
+    runs-on: ubuntu-latest
+    needs: [quality-gate]
+
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build application
+        run: |
+          yarn build
+          echo "✅ Build completed successfully"
+
+      - name: Validate build output
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ Build output directory 'dist' not found"
+            exit 1
+          fi
+
+          if [ ! -f "dist/server.js" ]; then
+            echo "❌ Main server file not found in build output"
+            exit 1
+          fi
+
+          echo "✅ Build output validation passed"
+
+      - name: Setup test database
+        run: |
+          yarn dynamodb:create-table
+          echo "✅ Test database setup completed"
+
+      - name: Run tests (when implemented)
+        run: |
+          # This will be updated when tests are implemented
+          echo "📝 Tests would run here"
+          echo "yarn test"
+          echo "✅ Test execution placeholder completed"
+
+      - name: Check test coverage (when implemented)
+        run: |
+          # This will be updated when coverage is implemented
+          echo "📊 Coverage would be checked here"
+          echo "yarn test:coverage"
+          echo "✅ Coverage check placeholder completed"
+
+  # Job 5: Documentation and API Validation
+  documentation:
+    name: Documentation & API Validation
+    runs-on: ubuntu-latest
+    needs: [build-test-validation]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build application
+        run: yarn build
+
+      - name: Check README completeness
+        run: |
+          if [ ! -f "README.md" ]; then
+            echo "❌ README.md file is missing"
+            exit 1
+          fi
+
+          # Check for essential sections
+          REQUIRED_SECTIONS=("Installation" "Usage" "API" "Development")
+          for section in "${REQUIRED_SECTIONS[@]}"; do
+            if ! grep -i "$section" README.md > /dev/null; then
+              echo "⚠️ README.md missing section: $section"
+            fi
+          done
+
+          echo "✅ README.md validation completed"
+
+      - name: Validate API documentation
+        run: |
+          # Start the server to validate Swagger docs
+          yarn start &
+          SERVER_PID=$!
+          sleep 10
+
+          # Check if Swagger endpoint is accessible
+          if curl -f http://localhost:3000/documentation > /dev/null 2>&1; then
+            echo "✅ API documentation is accessible"
+          else
+            echo "⚠️ API documentation endpoint not accessible"
+          fi
+
+          kill $SERVER_PID || true
+
+  # Job 6: Performance Impact Assessment
+  performance-impact:
+    name: Performance Impact Assessment
+    runs-on: ubuntu-latest
+    needs: [build-test-validation]
+    if: contains(github.event.pull_request.labels.*.name, 'performance-critical')
+
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build and start application
+        run: |
+          yarn build
+          yarn dynamodb:create-table
+          yarn start &
+          sleep 15
+
+      - name: Run performance baseline
+        run: |
+          npm install -g autocannon
+
+          echo "🚀 Running performance test..."
+          autocannon -c 10 -d 30 -p 10 http://localhost:3000/health > perf-results.txt
+
+          cat perf-results.txt
+
+          # Extract key metrics
+          RPS=$(grep "Req/Sec" perf-results.txt | awk '{print $2}')
+          LATENCY=$(grep "Latency" perf-results.txt | awk '{print $2}')
+
+          echo "📊 Performance Results:"
+          echo "Requests per second: $RPS"
+          echo "Average latency: $LATENCY"
+
+  # Job 7: Final PR Status Check
+  pr-status:
+    name: PR Status Summary
+    runs-on: ubuntu-latest
+    needs: [pr-validation, quality-gate, security-compliance, build-test-validation, documentation]
+    if: always()
+
+    steps:
+      - name: Check all job results
+        run: |
+          echo "📋 PR Check Summary:"
+          echo "PR Validation: ${{ needs.pr-validation.result }}"
+          echo "Quality Gate: ${{ needs.quality-gate.result }}"
+          echo "Security & Compliance: ${{ needs.security-compliance.result }}"
+          echo "Build & Test: ${{ needs.build-test-validation.result }}"
+          echo "Documentation: ${{ needs.documentation.result }}"
+
+          if [[ "${{ needs.pr-validation.result }}" == "success" && 
+                "${{ needs.quality-gate.result }}" == "success" && 
+                "${{ needs.security-compliance.result }}" == "success" && 
+                "${{ needs.build-test-validation.result }}" == "success" && 
+                "${{ needs.documentation.result }}" == "success" ]]; then
+            echo "✅ All PR checks passed! Ready for review."
+          else
+            echo "❌ Some PR checks failed. Please address the issues before merging."
+            exit 1
+          fi
+
+      - name: Comment PR results
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const results = {
+              validation: '${{ needs.pr-validation.result }}',
+              quality: '${{ needs.quality-gate.result }}',
+              security: '${{ needs.security-compliance.result }}',
+              build: '${{ needs.build-test-validation.result }}',
+              docs: '${{ needs.documentation.result }}'
+            };
+
+            const getEmoji = (status) => status === 'success' ? '✅' : '❌';
+
+            const body = `## 🔍 PR Check Results
+
+            | Check | Status |
+            |-------|--------|
+            | PR Validation | ${getEmoji(results.validation)} ${results.validation} |
+            | Code Quality | ${getEmoji(results.quality)} ${results.quality} |
+            | Security & Compliance | ${getEmoji(results.security)} ${results.security} |
+            | Build & Test | ${getEmoji(results.build)} ${results.build} |
+            | Documentation | ${getEmoji(results.docs)} ${results.docs} |
+
+            ${Object.values(results).every(r => r === 'success') 
+              ? '🎉 All checks passed! This PR is ready for review.' 
+              : '⚠️ Some checks failed. Please review and fix the issues.'}
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

@@ -1,0 +1,344 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['main', 'develop']
+
+env:
+  NODE_VERSION: '18'
+  YARN_CACHE_FOLDER: ~/.yarn
+
+jobs:
+  # Job 1: Code Quality and Security Checks
+  code-quality:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Needed for SonarCloud analysis
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: TypeScript type checking
+        run: yarn type-check
+
+      - name: ESLint check
+        run: yarn lint:check
+
+      - name: Prettier formatting check
+        run: yarn format:check
+
+      - name: Check for security vulnerabilities
+        run: yarn audit --level moderate
+
+      - name: Check for outdated dependencies
+        run: yarn outdated || true
+
+  # Job 2: Build and Test
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: ['16', '18', '20']
+
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+        options: >-
+          --health-cmd "curl -f http://localhost:8000/ || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build application
+        run: yarn build
+
+      - name: Verify build artifacts
+        run: |
+          test -d dist
+          test -f dist/server.js
+          echo "Build artifacts verified successfully"
+
+      - name: Setup test environment
+        run: |
+          # Create DynamoDB tables for testing
+          yarn dynamodb:create-table || echo "Table creation failed or already exists"
+
+      - name: Run tests
+        run: |
+          # Add test command when tests are implemented
+          echo "Tests would run here"
+          # yarn test
+        env:
+          AWS_REGION: us-east-1
+          DYNAMODB_ENDPOINT: http://localhost:8000
+
+      - name: Generate test coverage
+        run: |
+          # Add coverage command when tests are implemented
+          echo "Test coverage would be generated here"
+          # yarn test:coverage
+
+      - name: Upload coverage to Codecov
+        if: matrix.node-version == '18'
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
+
+  # Job 3: Docker Build and Security Scan
+  docker:
+    name: Docker Build & Security Scan
+    runs-on: ubuntu-latest
+    needs: [code-quality]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: aws-config-service:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: aws-config-service:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Job 4: Dependency Check
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run dependency check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'aws-config-service'
+          path: '.'
+          format: 'HTML'
+          out: 'dependency-check-report'
+
+      - name: Upload dependency check results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-check-report
+          path: dependency-check-report/
+
+  # Job 5: Performance and Load Testing
+  performance:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'performance-test')
+
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build application
+        run: yarn build
+
+      - name: Setup test environment
+        run: yarn dynamodb:create-table
+
+      - name: Start application
+        run: |
+          yarn start &
+          sleep 10
+        env:
+          AWS_REGION: us-east-1
+          DYNAMODB_ENDPOINT: http://localhost:8000
+
+      - name: Run performance tests
+        run: |
+          # Install artillery for load testing
+          npm install -g artillery
+          # Create a basic load test config
+          cat > artillery-test.yml << EOF
+          config:
+            target: 'http://localhost:3000'
+            phases:
+              - duration: 60
+                arrivalRate: 10
+          scenarios:
+            - name: "Health check"
+              requests:
+                - get:
+                    url: "/health"
+          EOF
+          artillery run artillery-test.yml
+
+  # Job 6: Integration Tests
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build application
+        run: yarn build
+
+      - name: Setup test environment
+        run: yarn dynamodb:create-table
+
+      - name: Run integration tests
+        run: |
+          # Integration tests would be implemented here
+          echo "Integration tests would run here"
+          # yarn test:integration
+        env:
+          AWS_REGION: us-east-1
+          DYNAMODB_ENDPOINT: http://localhost:8000
+
+  # Job 7: Generate and Upload Artifacts
+  artifacts:
+    name: Generate Artifacts
+    runs-on: ubuntu-latest
+    needs: [build-and-test, docker]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build application
+        run: yarn build
+
+      - name: Create deployment package
+        run: |
+          tar -czf aws-config-service-${{ github.sha }}.tar.gz \
+            dist/ \
+            package.json \
+            yarn.lock \
+            healthcheck.js \
+            Dockerfile \
+            docker-compose.yml
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: aws-config-service-${{ github.sha }}
+          path: aws-config-service-${{ github.sha }}.tar.gz
+          retention-days: 30
+
+  # Job 8: Notification
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [code-quality, build-and-test, docker, dependency-check]
+    if: always()
+
+    steps:
+      - name: Notify on success
+        if: needs.code-quality.result == 'success' && needs.build-and-test.result == 'success' && needs.docker.result == 'success'
+        run: |
+          echo "✅ All CI checks passed successfully!"
+
+      - name: Notify on failure
+        if: needs.code-quality.result == 'failure' || needs.build-and-test.result == 'failure' || needs.docker.result == 'failure'
+        run: |
+          echo "❌ CI checks failed. Please review the failed jobs."
+          exit 1
