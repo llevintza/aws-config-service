@@ -69,14 +69,14 @@ const consoleFormat = winston.format.combine(
       }
     }
     return logMessage;
-  })
+  }),
 );
 
 // Custom format for file output (no colors, structured)
 const fileFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
-  winston.format.json()
+  winston.format.json(),
 );
 
 // Daily rotate file transport for general logs
@@ -118,7 +118,7 @@ const logger = winston.createLogger({
   level: process.env.LOG_LEVEL ?? 'info',
   format: winston.format.combine(
     winston.format.timestamp(),
-    winston.format.errors({ stack: true })
+    winston.format.errors({ stack: true }),
   ),
   transports: [consoleTransport, dailyRotateFileTransport, errorRotateFileTransport],
   exitOnError: false,
@@ -141,7 +141,7 @@ errorRotateFileTransport.on('new', (newFilename: string) => {
   logger.info('New error log file created', { filename: newFilename });
 }); // Add request ID middleware helper
 export const createRequestLogger = (
-  requestId: string
+  requestId: string,
 ): {
   info: (message: string, meta?: any) => void;
   warn: (message: string, meta?: any) => void;

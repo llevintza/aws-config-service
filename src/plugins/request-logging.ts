@@ -101,7 +101,7 @@ async function requestLoggingPluginFn(fastify: FastifyInstance): Promise<void> {
         },
         timestamp: new Date().toISOString(),
       });
-    }
+    },
   );
 }
 

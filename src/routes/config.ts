@@ -17,7 +17,7 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
     { schema: configSchemas.getConfigByParams },
     async (
       request: FastifyRequest<{ Params: ConfigParams }>,
-      reply: FastifyReply
+      reply: FastifyReply,
     ): Promise<ConfigResponse> => {
       const { tenant, cloudRegion, service, configName } = request.params;
 
@@ -107,7 +107,7 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
         reply.code(500);
         throw new Error('Internal server error while retrieving configuration');
       }
-    }
+    },
   );
 
   // GET /config - List all available configurations (for debugging/discovery)
@@ -144,6 +144,6 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
         reply.code(500);
         throw new Error('Internal server error while retrieving configurations');
       }
-    }
+    },
   );
 }
