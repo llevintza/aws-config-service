@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discussion
+    url: https://github.com/llevintza/aws-config-service/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 📚 Documentation
+    url: https://github.com/llevintza/aws-config-service#readme
+    about: Check our documentation for common questions
+  - name: 🔒 Security Issues
+    url: https://github.com/llevintza/aws-config-service/issues/new?labels=security
+    about: Report security vulnerabilities privately
