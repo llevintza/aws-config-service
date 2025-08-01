@@ -47,3 +47,17 @@ export interface ConfigResponse {
   config: ConfigValue | null;
   found: boolean;
 }
+
+// DynamoDB-specific types
+export interface DynamoDBConfigItem {
+  pk: string; // Primary key: tenant#cloudRegion#service#configName
+  sk: string; // Sort key: config
+  tenant: string;
+  cloudRegion: string;
+  service: string;
+  configName: string;
+  value: string | number;
+  unit?: string;
+  description?: string;
+  ttl?: number; // Optional TTL for cache expiration
+}

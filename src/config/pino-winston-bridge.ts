@@ -1,4 +1,4 @@
-import pino from 'pino';
+import { pino, stdSerializers } from 'pino';
 import logger from './logger';
 
 // Create a custom Pino stream that forwards to Winston
@@ -38,14 +38,14 @@ const winstonStream = {
 // Create Pino logger that uses Winston as transport
 export const pinoLogger = pino(
   {
-    level: process.env.LOG_LEVEL || 'info',
+    level: process.env.LOG_LEVEL ?? 'info',
     serializers: {
-      req: pino.stdSerializers.req,
-      res: pino.stdSerializers.res,
-      err: pino.stdSerializers.err,
+      req: stdSerializers.req,
+      res: stdSerializers.res,
+      err: stdSerializers.err,
     },
   },
-  winstonStream
+  winstonStream,
 );
 
 export default pinoLogger;

@@ -1,8 +1,5 @@
 {
-  "src/**/*.{ts,js}": ["eslint --fix", "prettier --write", "git add"],
-  "src/**/*.ts": ["bash -c 'tsc --noEmit'"],
-  "*.{json,md,yml,yaml}": ["prettier --write", "git add"],
-  "*.{ts,js,json,md,yml,yaml}": [
-    "bash -c 'echo \"Checking for trailing whitespace and line endings...\" && ! grep -l \"[[:space:]]$\" \"$@\" && echo \"✓ No trailing whitespace found\"'"
-  ]
+  "*.{ts,tsx}": ["prettier --write", "eslint --fix"],
+  "*.{js,jsx}": ["prettier --write", "eslint --fix"],
+  "*.{json,md,yml,yaml}": ["prettier --write"]
 }

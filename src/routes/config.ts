@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { getConfigService } from '../container/DIContainer';
 import configSchemas from '../schemas/config.json';
-import { configService } from '../services/configService';
 import { ConfigRequest, ConfigResponse } from '../types/config';
 
 interface ConfigParams {
@@ -17,7 +17,7 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
     { schema: configSchemas.getConfigByParams },
     async (
       request: FastifyRequest<{ Params: ConfigParams }>,
-      reply: FastifyReply
+      reply: FastifyReply,
     ): Promise<ConfigResponse> => {
       const { tenant, cloudRegion, service, configName } = request.params;
 
@@ -40,7 +40,8 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
       });
 
       try {
-        const config = configService.getConfig(configRequest);
+        const configService = getConfigService();
+        const config = await configService.getConfig(configRequest);
 
         if (config) {
           const response: ConfigResponse = {
@@ -106,7 +107,7 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
         reply.code(500);
         throw new Error('Internal server error while retrieving configuration');
       }
-    }
+    },
   );
 
   // GET /config - List all available configurations (for debugging/discovery)
@@ -119,7 +120,8 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
       });
 
       try {
-        const allConfigs = configService.getAllConfigs();
+        const configService = getConfigService();
+        const allConfigs = await configService.getAllConfigs();
 
         request.requestLogger.info('All configs retrieved successfully', {
           event: 'business.config.get_all.success',
@@ -142,6 +144,6 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
         reply.code(500);
         throw new Error('Internal server error while retrieving configurations');
       }
-    }
+    },
   );
 }
