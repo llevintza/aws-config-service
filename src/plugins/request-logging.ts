@@ -21,7 +21,7 @@ async function requestLoggingPluginFn(fastify: FastifyInstance): Promise<void> {
       http: {
         method: request.method,
         url: request.url,
-        route: request.routeOptions?.url || request.url,
+        route: request.routeOptions?.url ?? request.url,
         userAgent: request.headers['user-agent'],
         contentType: request.headers['content-type'],
         contentLength: request.headers['content-length'],
@@ -49,7 +49,7 @@ async function requestLoggingPluginFn(fastify: FastifyInstance): Promise<void> {
       http: {
         method: request.method,
         url: request.url,
-        route: request.routeOptions?.url || request.url,
+        route: request.routeOptions?.url ?? request.url,
         statusCode: reply.statusCode,
         statusMessage: reply.raw.statusMessage,
       },
@@ -80,7 +80,7 @@ async function requestLoggingPluginFn(fastify: FastifyInstance): Promise<void> {
         http: {
           method: request.method,
           url: request.url,
-          route: request.routeOptions?.url || request.url,
+          route: request.routeOptions?.url ?? request.url,
         },
         client: {
           ip: request.ip,

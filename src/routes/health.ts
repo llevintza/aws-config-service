@@ -16,7 +16,7 @@ export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
         status: 'healthy',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
-        version: process.env.npm_package_version || '1.0.0',
+        version: process.env.npm_package_version ?? '1.0.0',
         message: 'Service is running smoothly! 🎉',
       };
 

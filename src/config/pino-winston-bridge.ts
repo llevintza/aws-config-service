@@ -38,7 +38,7 @@ const winstonStream = {
 // Create Pino logger that uses Winston as transport
 export const pinoLogger = pino(
   {
-    level: process.env.LOG_LEVEL || 'info',
+    level: process.env.LOG_LEVEL ?? 'info',
     serializers: {
       req: pino.stdSerializers.req,
       res: pino.stdSerializers.res,
