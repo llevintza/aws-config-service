@@ -25,8 +25,8 @@ export class DynamoConfigService implements IConfigService {
       region: dynamoDBConfig.region,
       endpoint: dynamoDBConfig.endpoint,
       credentials: {
-        accessKeyId: dynamoDBConfig.accessKeyId!,
-        secretAccessKey: dynamoDBConfig.secretAccessKey!,
+        accessKeyId: dynamoDBConfig.accessKeyId ?? 'dummy',
+        secretAccessKey: dynamoDBConfig.secretAccessKey ?? 'dummy',
       },
     });
 

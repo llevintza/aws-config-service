@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import winston from 'winston';
+import { createLogger, format, transports } from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 
 // Ensure logs directory exists
@@ -10,11 +10,12 @@ if (!fs.existsSync(logsDir)) {
 }
 
 // Custom format for console output with colors and semantic structure
-const consoleFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-  winston.format.errors({ stack: true }),
-  winston.format.colorize({ all: true }),
-  winston.format.printf(({ timestamp, level, message, stack, event, requestId, ...meta }: any) => {
+const consoleFormat = format.combine(
+  format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  format.errors({ stack: true }),
+  format.colorize({ all: true }),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  format.printf(({ timestamp, level, message, stack, event, requestId, ...meta }: any) => {
     let logMessage = `${timestamp} [${level}]`;
 
     // Add request ID if available
@@ -73,10 +74,10 @@ const consoleFormat = winston.format.combine(
 );
 
 // Custom format for file output (no colors, structured)
-const fileFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-  winston.format.errors({ stack: true }),
-  winston.format.json(),
+const fileFormat = format.combine(
+  format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  format.errors({ stack: true }),
+  format.json(),
 );
 
 // Daily rotate file transport for general logs
@@ -106,7 +107,7 @@ const errorRotateFileTransport = new DailyRotateFile({
 });
 
 // Console transport with colors
-const consoleTransport = new winston.transports.Console({
+const consoleTransport = new transports.Console({
   format: consoleFormat,
   level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
   handleExceptions: true,
@@ -114,12 +115,9 @@ const consoleTransport = new winston.transports.Console({
 });
 
 // Create the logger instance
-const logger = winston.createLogger({
+const logger = createLogger({
   level: process.env.LOG_LEVEL ?? 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-  ),
+  format: format.combine(format.timestamp(), format.errors({ stack: true })),
   transports: [consoleTransport, dailyRotateFileTransport, errorRotateFileTransport],
   exitOnError: false,
 });
@@ -143,21 +141,25 @@ errorRotateFileTransport.on('new', (newFilename: string) => {
 export const createRequestLogger = (
   requestId: string,
 ): {
-  info: (message: string, meta?: any) => void;
-  warn: (message: string, meta?: any) => void;
-  error: (message: string, meta?: any) => void;
-  debug: (message: string, meta?: any) => void;
+  info: (message: string, meta?: unknown) => void;
+  warn: (message: string, meta?: unknown) => void;
+  error: (message: string, meta?: unknown) => void;
+  debug: (message: string, meta?: unknown) => void;
 } => {
   return {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     info: (message: string, meta?: any): void => {
       logger.info(message, { requestId, ...meta });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     warn: (message: string, meta?: any): void => {
       logger.warn(message, { requestId, ...meta });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error: (message: string, meta?: any): void => {
       logger.error(message, { requestId, ...meta });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     debug: (message: string, meta?: any): void => {
       logger.debug(message, { requestId, ...meta });
     },
