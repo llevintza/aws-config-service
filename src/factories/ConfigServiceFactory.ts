@@ -1,3 +1,4 @@
+import logger from '../config/logger';
 import { IConfigService } from '../interfaces/IConfigService';
 import { DynamoConfigService } from '../services/dynamoConfigService';
 import { FileConfigService } from '../services/fileConfigService';
@@ -24,10 +25,10 @@ export class ConfigServiceFactory {
     const useDynamoDB = options.useDynamoDB ?? process.env.USE_DYNAMODB === 'true';
 
     if (useDynamoDB) {
-      console.log('ConfigServiceFactory: Creating DynamoDB-based configuration service');
+      logger.info('ConfigServiceFactory: Creating DynamoDB-based configuration service');
       return new DynamoConfigService();
     } else {
-      console.log('ConfigServiceFactory: Creating file-based configuration service');
+      logger.info('ConfigServiceFactory: Creating file-based configuration service');
       return new FileConfigService(options.configFilePath);
     }
   }

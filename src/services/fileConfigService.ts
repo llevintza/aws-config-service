@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import logger from '../config/logger';
 import { IConfigService } from '../interfaces/IConfigService';
 import { ConfigRequest, ConfigurationData, ConfigValue } from '../types/config';
 
@@ -12,7 +13,7 @@ export class FileConfigService implements IConfigService {
   private readonly configPath: string;
 
   constructor(configPath?: string) {
-    this.configPath = configPath || path.join(process.cwd(), 'data', 'configurations.json');
+    this.configPath = configPath ?? path.join(process.cwd(), 'data', 'configurations.json');
     this.loadConfigData();
   }
 
@@ -21,7 +22,7 @@ export class FileConfigService implements IConfigService {
       const rawData = fs.readFileSync(this.configPath, 'utf-8');
       this.configData = JSON.parse(rawData);
     } catch (error) {
-      console.error('Error loading configuration data:', error);
+      logger.error('Error loading configuration data:', error);
       throw new Error(`Failed to load configuration data from ${this.configPath}`);
     }
   }
@@ -53,7 +54,7 @@ export class FileConfigService implements IConfigService {
 
       return configData;
     } catch (error) {
-      console.error('Error retrieving configuration:', error);
+      logger.error('Error retrieving configuration:', error);
       return null;
     }
   }

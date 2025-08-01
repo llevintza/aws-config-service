@@ -7,6 +7,7 @@ import {
   ScanCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { dynamoDBConfig } from '../config/dynamodb';
+import logger from '../config/logger';
 import { IConfigService } from '../interfaces/IConfigService';
 import { ConfigRequest, ConfigurationData, ConfigValue, DynamoDBConfigItem } from '../types/config';
 
@@ -68,7 +69,7 @@ export class DynamoConfigService implements IConfigService {
         description: item.description,
       };
     } catch (error) {
-      console.error('Error retrieving configuration from DynamoDB:', error);
+      logger.error('Error retrieving configuration from DynamoDB:', error);
       return null;
     }
   }
@@ -108,7 +109,7 @@ export class DynamoConfigService implements IConfigService {
 
       return configData;
     } catch (error) {
-      console.error('Error retrieving all configurations from DynamoDB:', error);
+      logger.error('Error retrieving all configurations from DynamoDB:', error);
       return {};
     }
   }
@@ -118,7 +119,7 @@ export class DynamoConfigService implements IConfigService {
       const allConfigs = await this.getAllConfigs();
       return Object.keys(allConfigs);
     } catch (error) {
-      console.error('Error retrieving tenants from DynamoDB:', error);
+      logger.error('Error retrieving tenants from DynamoDB:', error);
       return [];
     }
   }
@@ -146,7 +147,7 @@ export class DynamoConfigService implements IConfigService {
 
       return Array.from(regions);
     } catch (error) {
-      console.error('Error retrieving cloud regions from DynamoDB:', error);
+      logger.error('Error retrieving cloud regions from DynamoDB:', error);
       return [];
     }
   }
@@ -174,7 +175,7 @@ export class DynamoConfigService implements IConfigService {
 
       return Array.from(services);
     } catch (error) {
-      console.error('Error retrieving services from DynamoDB:', error);
+      logger.error('Error retrieving services from DynamoDB:', error);
       return [];
     }
   }
@@ -207,7 +208,7 @@ export class DynamoConfigService implements IConfigService {
 
       return Array.from(configNames);
     } catch (error) {
-      console.error('Error retrieving config names from DynamoDB:', error);
+      logger.error('Error retrieving config names from DynamoDB:', error);
       return [];
     }
   }
@@ -241,7 +242,7 @@ export class DynamoConfigService implements IConfigService {
       await this.docClient.send(command);
       return true;
     } catch (error) {
-      console.error('Error putting configuration to DynamoDB:', error);
+      logger.error('Error putting configuration to DynamoDB:', error);
       return false;
     }
   }
