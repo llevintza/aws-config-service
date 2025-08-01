@@ -11,7 +11,7 @@ interface ConfigParams {
   configName: string;
 }
 
-export async function configRoutes(fastify: FastifyInstance): Promise<void> {
+export function configRoutes(fastify: FastifyInstance): void {
   // GET /config/{tenant}/cloud/{cloudRegion}/service/{service}/config/{configName}
   fastify.get<{ Params: ConfigParams }>(
     '/config/:tenant/cloud/:cloudRegion/service/:service/config/:configName',
@@ -61,13 +61,13 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
               cloudRegion,
               service,
               configName,
-              hasValue: !!config,
+              hasValue: config !== null && config !== undefined,
             },
           });
 
           return response;
         } else {
-          reply.code(404);
+          void reply.code(404);
           const response: ConfigResponse = {
             tenant,
             cloudRegion,
@@ -105,7 +105,7 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
           },
         });
 
-        reply.code(500);
+        void reply.code(500);
         throw new Error('Internal server error while retrieving configuration');
       }
     },
@@ -142,7 +142,7 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
           },
         });
 
-        reply.code(500);
+        void reply.code(500);
         throw new Error('Internal server error while retrieving configurations');
       }
     },

@@ -1,5 +1,5 @@
 // Global test setup
-beforeAll(async () => {
+beforeAll(() => {
   // Setup test environment
   process.env.NODE_ENV = 'test';
   process.env.AWS_REGION = 'us-east-1';

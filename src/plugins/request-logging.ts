@@ -10,9 +10,9 @@ declare module 'fastify' {
   }
 }
 
-async function requestLoggingPluginFn(fastify: FastifyInstance): Promise<void> {
+function requestLoggingPluginFn(fastify: FastifyInstance): void {
   // Hook to add request logger and capture start time
-  fastify.addHook('preHandler', async (request: FastifyRequest) => {
+  fastify.addHook('preHandler', (request: FastifyRequest) => {
     request.startTime = Date.now();
     request.requestLogger = createRequestLogger(request.id);
 

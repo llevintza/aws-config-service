@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import type { ConfigurationData, ConfigRequest, ConfigValue } from '../types/config';
+import type { ConfigRequest, ConfigurationData, ConfigValue } from '../types/config';
 
 class ConfigService {
   private configData!: ConfigurationData;
@@ -14,7 +14,7 @@ class ConfigService {
     try {
       const configPath = path.join(process.cwd(), 'data', 'configurations.json');
       const rawData = fs.readFileSync(configPath, 'utf-8');
-      this.configData = JSON.parse(rawData);
+      this.configData = JSON.parse(rawData) as ConfigurationData;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error loading configuration data:', error);
@@ -28,22 +28,22 @@ class ConfigService {
 
       // Navigate through the configuration structure
       const tenantData = this.configData[tenant];
-      if (!tenantData) {
+      if (tenantData === null || tenantData === undefined) {
         return null;
       }
 
       const cloudData = tenantData.cloud[cloudRegion];
-      if (!cloudData) {
+      if (cloudData === null || cloudData === undefined) {
         return null;
       }
 
       const serviceData = cloudData.services[service];
-      if (!serviceData) {
+      if (serviceData === null || serviceData === undefined) {
         return null;
       }
 
       const configData = serviceData.configs[configName];
-      if (!configData) {
+      if (configData === null || configData === undefined) {
         return null;
       }
 
@@ -65,32 +65,34 @@ class ConfigService {
 
   public getCloudRegions(tenant: string): string[] {
     const tenantData = this.configData[tenant];
-    return tenantData ? Object.keys(tenantData.cloud) : [];
+    return tenantData !== null && tenantData !== undefined ? Object.keys(tenantData.cloud) : [];
   }
 
   public getServices(tenant: string, cloudRegion: string): string[] {
     const tenantData = this.configData[tenant];
-    if (!tenantData) {
+    if (tenantData === null || tenantData === undefined) {
       return [];
     }
 
     const cloudData = tenantData.cloud[cloudRegion];
-    return cloudData ? Object.keys(cloudData.services) : [];
+    return cloudData !== null && cloudData !== undefined ? Object.keys(cloudData.services) : [];
   }
 
   public getConfigNames(tenant: string, cloudRegion: string, service: string): string[] {
     const tenantData = this.configData[tenant];
-    if (!tenantData) {
+    if (tenantData === null || tenantData === undefined) {
       return [];
     }
 
     const cloudData = tenantData.cloud[cloudRegion];
-    if (!cloudData) {
+    if (cloudData === null || cloudData === undefined) {
       return [];
     }
 
     const serviceData = cloudData.services[service];
-    return serviceData ? Object.keys(serviceData.configs) : [];
+    return serviceData !== null && serviceData !== undefined
+      ? Object.keys(serviceData.configs)
+      : [];
   }
 
   // Reload configuration data (useful for hot-reloading in development)

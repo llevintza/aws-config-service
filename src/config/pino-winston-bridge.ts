@@ -6,7 +6,7 @@ import logger from './logger';
 const winstonStream = {
   write: (chunk: string): void => {
     try {
-      const logEntry = JSON.parse(chunk);
+      const logEntry = JSON.parse(chunk) as Record<string, unknown>;
       const { level, msg, ...meta } = logEntry;
 
       // Map Pino levels to Winston levels
@@ -19,13 +19,22 @@ const winstonStream = {
         60: 'error', // fatal -> error
       };
 
-      const winstonLevel = levelMap[level] || 'info';
-      const message = msg || 'No message';
+      const winstonLevel = levelMap[level as number] ?? 'info';
+      const message =
+        typeof msg === 'string'
+          ? msg
+          : msg !== null && msg !== undefined
+            ? String(msg)
+            : 'No message';
 
       // Clean up meta object
       const cleanMeta = { ...meta };
-      delete cleanMeta.hostname;
-      delete cleanMeta.pid;
+      if (typeof cleanMeta.hostname !== 'undefined') {
+        delete cleanMeta.hostname;
+      }
+      if (typeof cleanMeta.pid !== 'undefined') {
+        delete cleanMeta.pid;
+      }
 
       // Log to Winston
       logger.log(winstonLevel, message, cleanMeta);

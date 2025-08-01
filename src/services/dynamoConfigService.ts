@@ -93,15 +93,21 @@ export class DynamoConfigService implements IConfigService {
         for (const item of result.Items as DynamoDBConfigItem[]) {
           const { tenant, cloudRegion, service, configName, value, unit, description } = item;
 
-          if (!configData[tenant]) {
+          if (configData[tenant] === null || configData[tenant] === undefined) {
             configData[tenant] = { cloud: {} };
           }
 
-          if (!configData[tenant].cloud[cloudRegion]) {
+          if (
+            configData[tenant].cloud[cloudRegion] === null ||
+            configData[tenant].cloud[cloudRegion] === undefined
+          ) {
             configData[tenant].cloud[cloudRegion] = { services: {} };
           }
 
-          if (!configData[tenant].cloud[cloudRegion].services[service]) {
+          if (
+            configData[tenant].cloud[cloudRegion].services[service] === null ||
+            configData[tenant].cloud[cloudRegion].services[service] === undefined
+          ) {
             configData[tenant].cloud[cloudRegion].services[service] = { configs: {} };
           }
 

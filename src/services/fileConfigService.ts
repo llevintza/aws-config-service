@@ -21,7 +21,7 @@ export class FileConfigService implements IConfigService {
   private loadConfigData(): void {
     try {
       const rawData = fs.readFileSync(this.configPath, 'utf-8');
-      this.configData = JSON.parse(rawData);
+      this.configData = JSON.parse(rawData) as ConfigurationData;
     } catch (error) {
       logger.error('Error loading configuration data:', error);
       throw new Error(`Failed to load configuration data from ${this.configPath}`);
@@ -29,27 +29,31 @@ export class FileConfigService implements IConfigService {
   }
 
   public async getConfig(request: ConfigRequest): Promise<ConfigValue | null> {
+    return Promise.resolve(this.getConfigSync(request));
+  }
+
+  private getConfigSync(request: ConfigRequest): ConfigValue | null {
     try {
       const { tenant, cloudRegion, service, configName } = request;
 
       // Navigate through the configuration structure
       const tenantData = this.configData[tenant];
-      if (!tenantData) {
+      if (tenantData === null || tenantData === undefined) {
         return null;
       }
 
       const cloudData = tenantData.cloud[cloudRegion];
-      if (!cloudData) {
+      if (cloudData === null || cloudData === undefined) {
         return null;
       }
 
       const serviceData = cloudData.services[service];
-      if (!serviceData) {
+      if (serviceData === null || serviceData === undefined) {
         return null;
       }
 
       const configData = serviceData.configs[configName];
-      if (!configData) {
+      if (configData === null || configData === undefined) {
         return null;
       }
 
@@ -61,26 +65,30 @@ export class FileConfigService implements IConfigService {
   }
 
   public async getAllConfigs(): Promise<ConfigurationData> {
-    return this.configData;
+    return Promise.resolve(this.configData);
   }
 
   public async getTenants(): Promise<string[]> {
-    return Object.keys(this.configData);
+    return Promise.resolve(Object.keys(this.configData));
   }
 
   public async getCloudRegions(tenant: string): Promise<string[]> {
     const tenantData = this.configData[tenant];
-    return tenantData ? Object.keys(tenantData.cloud) : [];
+    return Promise.resolve(
+      tenantData !== null && tenantData !== undefined ? Object.keys(tenantData.cloud) : [],
+    );
   }
 
   public async getServices(tenant: string, cloudRegion: string): Promise<string[]> {
     const tenantData = this.configData[tenant];
-    if (!tenantData) {
-      return [];
+    if (tenantData === null || tenantData === undefined) {
+      return Promise.resolve([]);
     }
 
     const cloudData = tenantData.cloud[cloudRegion];
-    return cloudData ? Object.keys(cloudData.services) : [];
+    return Promise.resolve(
+      cloudData !== null && cloudData !== undefined ? Object.keys(cloudData.services) : [],
+    );
   }
 
   public async getConfigNames(
@@ -89,20 +97,22 @@ export class FileConfigService implements IConfigService {
     service: string,
   ): Promise<string[]> {
     const tenantData = this.configData[tenant];
-    if (!tenantData) {
-      return [];
+    if (tenantData === null || tenantData === undefined) {
+      return Promise.resolve([]);
     }
 
     const cloudData = tenantData.cloud[cloudRegion];
-    if (!cloudData) {
-      return [];
+    if (cloudData === null || cloudData === undefined) {
+      return Promise.resolve([]);
     }
 
     const serviceData = cloudData.services[service];
-    return serviceData ? Object.keys(serviceData.configs) : [];
+    return Promise.resolve(
+      serviceData !== null && serviceData !== undefined ? Object.keys(serviceData.configs) : [],
+    );
   }
 
   public async reloadConfig(): Promise<void> {
-    this.loadConfigData();
+    return Promise.resolve(this.loadConfigData());
   }
 }

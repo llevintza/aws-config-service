@@ -30,29 +30,31 @@ export class MockConfigService implements IConfigService {
   async getConfig(request: ConfigRequest): Promise<ConfigValue | null> {
     const { tenant, cloudRegion, service, configName } = request;
 
-    return (
-      this.mockData[tenant]?.cloud[cloudRegion]?.services[service]?.configs[configName] || null
+    return Promise.resolve(
+      this.mockData[tenant]?.cloud[cloudRegion]?.services[service]?.configs[configName] ?? null,
     );
   }
 
   async getAllConfigs(): Promise<ConfigurationData> {
-    return this.mockData;
+    return Promise.resolve(this.mockData);
   }
 
   async getTenants(): Promise<string[]> {
-    return Object.keys(this.mockData);
+    return Promise.resolve(Object.keys(this.mockData));
   }
 
   async getCloudRegions(tenant: string): Promise<string[]> {
-    return Object.keys(this.mockData[tenant]?.cloud || {});
+    return Promise.resolve(Object.keys(this.mockData[tenant]?.cloud ?? {}));
   }
 
   async getServices(tenant: string, cloudRegion: string): Promise<string[]> {
-    return Object.keys(this.mockData[tenant]?.cloud[cloudRegion]?.services || {});
+    return Promise.resolve(Object.keys(this.mockData[tenant]?.cloud[cloudRegion]?.services ?? {}));
   }
 
   async getConfigNames(tenant: string, cloudRegion: string, service: string): Promise<string[]> {
-    return Object.keys(this.mockData[tenant]?.cloud[cloudRegion]?.services[service]?.configs || {});
+    return Promise.resolve(
+      Object.keys(this.mockData[tenant]?.cloud[cloudRegion]?.services[service]?.configs ?? {}),
+    );
   }
 
   async reloadConfig(): Promise<void> {

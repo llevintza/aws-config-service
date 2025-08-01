@@ -21,10 +21,8 @@ describe('MockConfigService', () => {
 
       expect(result).toBeDefined();
       expect(result).not.toBeNull();
-      if (result) {
-        expect(result.value).toBe('test-value');
-        expect(result.description).toBe('Test configuration');
-      }
+      expect(result?.value).toBe('test-value');
+      expect(result?.description).toBe('Test configuration');
     });
 
     it('should return null for non-existent config', async () => {
@@ -133,9 +131,7 @@ describe('MockConfigService', () => {
       });
 
       expect(config).not.toBeNull();
-      if (config) {
-        expect(config.value).toBe('new-value');
-      }
+      expect(config?.value).toBe('new-value');
     });
   });
 });

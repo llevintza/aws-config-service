@@ -4,6 +4,22 @@ import path from 'path';
 import { createLogger, format, transports } from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 
+// Define interfaces for log entry structures
+interface HttpInfo {
+  method?: string;
+  url?: string;
+  statusCode?: number;
+}
+
+interface PerformanceInfo {
+  responseTime?: number;
+  responseTimeUnit?: string;
+}
+
+interface ClientInfo {
+  ip?: string;
+}
+
 // Ensure logs directory exists
 const logsDir = path.join(process.cwd(), 'logs');
 if (!fs.existsSync(logsDir)) {
@@ -16,23 +32,24 @@ const consoleFormat = format.combine(
   format.errors({ stack: true }),
   format.colorize({ all: true }),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  format.printf(({ timestamp, level, message, stack, event, requestId, ...meta }: any) => {
+  format.printf((info: any) => {
+    const { timestamp, level, message, stack, event, requestId, ...meta } = info;
     let logMessage = `${timestamp} [${level}]`;
 
     // Add request ID if available
-    if (requestId) {
+    if (requestId !== null && requestId !== undefined) {
       logMessage += ` [${requestId}]`;
     }
 
     // Add event type if available for semantic logging
-    if (event) {
+    if (event !== null && event !== undefined) {
       logMessage += ` [${event}]`;
     }
 
     logMessage += `: ${message}`;
 
     // Add stack trace for errors
-    if (stack) {
+    if (stack !== null && stack !== undefined) {
       logMessage += `\n${stack}`;
     }
 
@@ -40,22 +57,26 @@ const consoleFormat = format.combine(
     const metaKeys = Object.keys(meta);
     if (metaKeys.length > 0) {
       // Format specific semantic fields nicely
-      if (meta.http && typeof meta.http === 'object') {
-        const http = meta.http;
-        logMessage += `\n  HTTP: ${http.method} ${http.url}`;
-        if (http.statusCode) {
+      if (meta.http !== null && meta.http !== undefined && typeof meta.http === 'object') {
+        const http = meta.http as HttpInfo;
+        logMessage += `\n  HTTP: ${http.method ?? 'UNKNOWN'} ${http.url ?? 'UNKNOWN'}`;
+        if (http.statusCode !== null && http.statusCode !== undefined) {
           logMessage += ` → ${http.statusCode}`;
         }
       }
 
-      if (meta.performance && typeof meta.performance === 'object') {
-        const perf = meta.performance;
-        logMessage += `\n  Performance: ${perf.responseTime}${perf.responseTimeUnit || 'ms'}`;
+      if (
+        meta.performance !== null &&
+        meta.performance !== undefined &&
+        typeof meta.performance === 'object'
+      ) {
+        const perf = meta.performance as PerformanceInfo;
+        logMessage += `\n  Performance: ${perf.responseTime ?? 'UNKNOWN'}${perf.responseTimeUnit ?? 'ms'}`;
       }
 
-      if (meta.client && typeof meta.client === 'object') {
-        const client = meta.client;
-        logMessage += `\n  Client: ${client.ip}`;
+      if (meta.client !== null && meta.client !== undefined && typeof meta.client === 'object') {
+        const client = meta.client as ClientInfo;
+        logMessage += `\n  Client: ${client.ip ?? 'UNKNOWN'}`;
       }
 
       // Show remaining metadata as JSON

@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 import healthSchemas from '../schemas/health.json';
 
-export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
+export function healthRoutes(fastify: FastifyInstance): void {
   // Health check endpoint
   fastify.get(
     '/health',
@@ -47,7 +47,7 @@ export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
         },
       });
 
-      reply.redirect('/docs');
+      void reply.redirect('/docs');
     },
   );
 }
