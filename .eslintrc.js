@@ -1,11 +1,12 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
-  plugins: ['@typescript-eslint', 'import'],
+  plugins: ['@typescript-eslint', 'import', 'prettier'],
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:import/recommended',
     'plugin:import/typescript',
+    'plugin:prettier/recommended',
   ],
   parserOptions: {
     ecmaVersion: 2022,
@@ -26,10 +27,13 @@ module.exports = {
   },
   rules: {
     // TypeScript specific rules
-    '@typescript-eslint/no-unused-vars': ['error', {
-      'argsIgnorePattern': '^_',
-      'varsIgnorePattern': '^_',
-    }],
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      },
+    ],
     '@typescript-eslint/explicit-function-return-type': 'warn',
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/prefer-as-const': 'error',
@@ -44,18 +48,11 @@ module.exports = {
     'import/order': [
       'error',
       {
-        'groups': [
-          'builtin',
-          'external',
-          'internal',
-          'parent',
-          'sibling',
-          'index',
-        ],
+        groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
         'newlines-between': 'never',
-        'alphabetize': {
-          'order': 'asc',
-          'caseInsensitive': true,
+        alphabetize: {
+          order: 'asc',
+          caseInsensitive: true,
         },
       },
     ],
@@ -74,32 +71,17 @@ module.exports = {
     // Best practices
     'prefer-template': 'error',
     'no-throw-literal': 'error',
-    'eqeqeq': ['error', 'always'],
-    'curly': ['error', 'all'],
+    eqeqeq: ['error', 'always'],
+    curly: ['error', 'all'],
     'no-eval': 'error',
     'no-implied-eval': 'error',
     'no-new-func': 'error',
     'no-script-url': 'error',
     'no-sequences': 'error',
     'no-with': 'error',
-    'yoda': 'error',
+    yoda: 'error',
 
-    // Code style (basic - let Prettier handle most formatting)
-    'brace-style': ['error', '1tbs', { 'allowSingleLine': true }],
-    'comma-dangle': ['error', 'always-multiline'],
-    'comma-spacing': ['error', { 'before': false, 'after': true }],
-    'comma-style': ['error', 'last'],
-    'computed-property-spacing': ['error', 'never'],
-    'eol-last': ['error', 'always'],
-    'key-spacing': ['error', { 'beforeColon': false, 'afterColon': true }],
-    'no-multiple-empty-lines': ['error', { 'max': 2, 'maxEOF': 1, 'maxBOF': 0 }],
-    'no-trailing-spaces': 'error',
-    'object-curly-spacing': ['error', 'always'],
-    'quotes': ['error', 'single', { 'avoidEscape': true }],
-    'semi': ['error', 'always'],
-    'space-before-blocks': ['error', 'always'],
-    'space-in-parens': ['error', 'never'],
-    'space-infix-ops': 'error',
+    // Let Prettier handle formatting - only keep non-formatting rules
   },
   overrides: [
     {
