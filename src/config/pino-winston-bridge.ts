@@ -45,7 +45,7 @@ export const pinoLogger = pino(
       err: pino.stdSerializers.err,
     },
   },
-  winstonStream
+  winstonStream,
 );
 
 export default pinoLogger;

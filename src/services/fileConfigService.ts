@@ -85,7 +85,7 @@ export class FileConfigService implements IConfigService {
   public async getConfigNames(
     tenant: string,
     cloudRegion: string,
-    service: string
+    service: string,
   ): Promise<string[]> {
     const tenantData = this.configData[tenant];
     if (!tenantData) {

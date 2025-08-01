@@ -40,7 +40,7 @@ class HybridConfigService implements IConfigService {
   public async getConfigNames(
     tenant: string,
     cloudRegion: string,
-    service: string
+    service: string,
   ): Promise<string[]> {
     return this.configService.getConfigNames(tenant, cloudRegion, service);
   }

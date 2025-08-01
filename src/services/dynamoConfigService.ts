@@ -38,7 +38,7 @@ export class DynamoConfigService implements IConfigService {
     tenant: string,
     cloudRegion: string,
     service: string,
-    configName: string
+    configName: string,
   ): string {
     return `${tenant}#${cloudRegion}#${service}#${configName}`;
   }
@@ -183,7 +183,7 @@ export class DynamoConfigService implements IConfigService {
   public async getConfigNames(
     tenant: string,
     cloudRegion: string,
-    service: string
+    service: string,
   ): Promise<string[]> {
     try {
       const command = new ScanCommand({
@@ -218,7 +218,7 @@ export class DynamoConfigService implements IConfigService {
     cloudRegion: string,
     service: string,
     configName: string,
-    config: ConfigValue
+    config: ConfigValue,
   ): Promise<boolean> {
     try {
       const pk = this.buildPrimaryKey(tenant, cloudRegion, service, configName);

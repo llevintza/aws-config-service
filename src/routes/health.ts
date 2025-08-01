@@ -30,7 +30,7 @@ export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
       });
 
       return healthData;
-    }
+    },
   );
 
   // Root endpoint - redirect to Swagger UI
@@ -47,6 +47,6 @@ export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
       });
 
       reply.redirect('/docs');
-    }
+    },
   );
 }
