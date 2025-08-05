@@ -166,8 +166,6 @@ export class DynamoConfigService implements IConfigService {
 
   public async getServices(tenant: string, cloudRegion: string): Promise<string[]> {
     try {
-      const command = new ScanCommand({
-        TableName: this.tableName,
       const command = new QueryCommand({
         TableName: this.tableName,
         IndexName: 'tenant-cloudRegion-index', // Ensure this GSI exists
@@ -195,19 +193,26 @@ export class DynamoConfigService implements IConfigService {
     }
   }
 
+  /**
+   * Requires a GSI named 'TenantCloudRegionServiceIndex' with
+   * partition key: tenant, sort key: cloudRegion_service
+   * (or a composite partition key if supported, otherwise concatenate cloudRegion and service)
+   */
   public async getConfigNames(
     tenant: string,
     cloudRegion: string,
     service: string,
   ): Promise<string[]> {
     try {
-      const command = new ScanCommand({
+      // If the GSI uses a composite sort key, concatenate cloudRegion and service
+      const cloudRegionService = `${cloudRegion}#${service}`;
+      const command = new QueryCommand({
         TableName: this.tableName,
-        FilterExpression: 'tenant = :tenant AND cloudRegion = :cloudRegion AND service = :service',
+        IndexName: 'TenantCloudRegionServiceIndex',
+        KeyConditionExpression: 'tenant = :tenant AND cloudRegion_service = :cloudRegion_service',
         ExpressionAttributeValues: {
           ':tenant': tenant,
-          ':cloudRegion': cloudRegion,
-          ':service': service,
+          ':cloudRegion_service': cloudRegionService,
         },
         ProjectionExpression: 'configName',
       });
