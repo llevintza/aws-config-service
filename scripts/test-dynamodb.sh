@@ -2,10 +2,26 @@
 
 # Quick DynamoDB Local Test
 # Tests if DynamoDB Local is working properly
+#
+# Prerequisites: Docker, AWS CLI v2
+# 📋 For complete setup instructions, see docs/CONTRIBUTOR_SETUP.md
 
 set -e
 
 echo "🧪 Testing DynamoDB Local setup..."
+
+# Check prerequisites
+if ! command -v docker &> /dev/null; then
+    echo "❌ Docker is not installed."
+    echo "📖 Please follow the setup guide: docs/CONTRIBUTOR_SETUP.md"
+    exit 1
+fi
+
+if ! command -v aws &> /dev/null; then
+    echo "❌ AWS CLI is not installed."
+    echo "📖 Please follow the setup guide: docs/CONTRIBUTOR_SETUP.md"
+    exit 1
+fi
 
 # Set environment variables
 export AWS_REGION=us-east-1

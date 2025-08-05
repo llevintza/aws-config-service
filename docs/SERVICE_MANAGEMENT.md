@@ -201,6 +201,36 @@ pkill node
 3. Check port availability before starting
 4. Monitor logs for errors and performance
 
+### CI Testing
+
+**Before running CI tests locally, ensure your environment is properly set up:**
+
+📋 **For complete setup instructions, see [CONTRIBUTOR_SETUP.md](./CONTRIBUTOR_SETUP.md)**
+
+#### Required Prerequisites
+
+- Docker (for container testing)
+- Node.js 22 (CI environment compatibility)
+- Yarn (package manager)
+- AWS CLI v2 (DynamoDB Local testing)
+- jq (JSON processing)
+- build-essential (native module compilation)
+
+#### CI Testing Commands
+
+```bash
+# Full CI simulation (requires all prerequisites)
+yarn ci:test-local
+
+# Individual CI components
+yarn ci:quality-check      # Code quality (no extra prerequisites)
+yarn ci:test-docker        # Docker builds (requires Docker)
+yarn ci:test-dynamodb      # DynamoDB Local (requires Docker + AWS CLI)
+yarn ci:test-compose       # Full compose test (requires Docker)
+```
+
+⚠️ **If any CI command fails with "command not found" errors, follow the [CONTRIBUTOR_SETUP.md](./CONTRIBUTOR_SETUP.md) guide.**
+
 ### Production
 
 1. Use `yarn build && yarn start` for production

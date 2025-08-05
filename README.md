@@ -39,8 +39,12 @@ GET /config/tenant1/cloud/us-east-1/service/api-gateway/config/rate-limit
 
 ### Prerequisites
 
-- Node.js 18+
-- Yarn package manager
+- **Node.js 22+** - For runtime compatibility with CI/CD environment
+- **Yarn** - Package manager
+- **Docker** - For containerization and local testing
+- **AWS CLI v2** - For DynamoDB Local integration and CI testing
+
+📋 **For detailed setup instructions, see [CONTRIBUTOR_SETUP.md](./docs/CONTRIBUTOR_SETUP.md)**
 
 ### Local Development
 
@@ -194,7 +198,9 @@ Example response:
 ├── data/
 │   └── configurations.json    # Configuration data
 ├── docs/
+│   ├── CONTRIBUTOR_SETUP.md   # Complete contributor setup guide
 │   ├── DEBUGGING.md           # Debugging guide
+│   ├── LOCAL_CI_TESTING.md    # Local CI testing guide
 │   └── SERVICE_MANAGEMENT.md  # Detailed service management guide
 ├── package.json
 ├── tsconfig.json
@@ -206,12 +212,17 @@ Example response:
 
 ## Available Scripts
 
+### Development
+
 - `yarn dev` - Development mode with hot reload
 - `yarn dev:watch` - TypeScript watch mode with auto-restart
 - `yarn build` - Build TypeScript to JavaScript
 - `yarn build:watch` - Build TypeScript in watch mode
 - `yarn start` - Start the compiled application
 - `yarn start:dev` - Build and start (useful for testing production build locally)
+
+### Service Management
+
 - `yarn stop` - Gracefully stop the running service
 - `yarn stop:force` - Force stop the service (if graceful stop fails)
 - `yarn restart` - Restart the service
@@ -219,15 +230,35 @@ Example response:
 - `yarn status` - Check if service is running
 - `yarn port:check` - Check what's using port 3000
 - `yarn port:free` - Free up port 3000
+
+### Code Quality
+
 - `yarn format` - Format code with Prettier
 - `yarn format:check` - Check if code is properly formatted
 - `yarn type-check` - Run TypeScript type checking
 - `yarn pre-commit` - Run pre-commit checks manually
 - `yarn lint` - Lint TypeScript files
 - `yarn lint:fix` - Fix linting issues
+
+### Prerequisites & Setup
+
+- `yarn check-prerequisites` - Verify all required tools are installed
+- 📋 **For setup help, see [CONTRIBUTOR_SETUP.md](./docs/CONTRIBUTOR_SETUP.md)**
+
+### Docker
+
 - `yarn docker:build` - Build Docker image
 - `yarn docker:run` - Run Docker container
 - `yarn docker:up` - Build and run with Docker Compose
 - `yarn docker:down` - Stop Docker Compose services
 - `yarn docker:stop` - Stop Docker services without removing
 - `yarn docker:restart` - Restart Docker services
+
+### CI Testing (requires prerequisites)
+
+- `yarn ci:test-local` - Run complete CI pipeline simulation
+- `yarn ci:test-docker` - Test Docker builds only
+- `yarn ci:test-dynamodb` - Test DynamoDB Local only
+- `yarn ci:test-compose` - Test Docker Compose setup
+- `yarn ci:quality-check` - Run code quality checks only
+- 📋 **For CI testing setup, see [LOCAL_CI_TESTING.md](./docs/LOCAL_CI_TESTING.md)**

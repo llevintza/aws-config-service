@@ -2,11 +2,18 @@
 
 # Local CI Testing Script
 # This script simulates the CI pipeline steps locally
+#
+# Prerequisites: Docker, Node.js 22, Yarn, AWS CLI v2, jq, build-essential
+# 📋 For complete setup instructions, see docs/CONTRIBUTOR_SETUP.md
 
 set -e
 
 echo "🚀 Starting local CI simulation..."
 echo "=================================="
+echo ""
+echo "📋 Prerequisites: Docker, Node.js 22, Yarn, AWS CLI v2, jq"
+echo "📖 Setup guide: docs/CONTRIBUTOR_SETUP.md"
+echo ""
 
 # Colors for output
 RED='\033[0;31m'
@@ -36,18 +43,21 @@ print_error() {
 print_step "Checking prerequisites..."
 
 if ! command -v docker &> /dev/null; then
-    print_error "Docker is not installed. Please install Docker first."
+    print_error "Docker is not installed."
+    print_error "📖 Please follow the setup guide: docs/CONTRIBUTOR_SETUP.md"
     exit 1
 fi
 
 if ! command -v yarn &> /dev/null; then
-    print_error "Yarn is not installed. Please install Yarn first."
+    print_error "Yarn is not installed."
+    print_error "📖 Please follow the setup guide: docs/CONTRIBUTOR_SETUP.md"
     exit 1
 fi
 
 if ! command -v aws &> /dev/null; then
-    print_warning "AWS CLI is not installed. Installing..."
-    # For Ubuntu/Debian
+    print_error "AWS CLI is not installed."
+    print_error "📖 Please follow the setup guide: docs/CONTRIBUTOR_SETUP.md"
+    exit 1
     if command -v apt-get &> /dev/null; then
         sudo apt-get update && sudo apt-get install -y awscli
     else

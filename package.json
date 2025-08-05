@@ -45,6 +45,7 @@
     "dynamodb:create-table": "ts-node scripts/create-table.ts",
     "dynamodb:migrate": "ts-node scripts/migrate-to-dynamodb.ts",
     "prepare": "husky install",
+    "check-prerequisites": "./scripts/check-prerequisites.sh",
     "ci:test-local": "./scripts/test-ci-locally.sh",
     "ci:test-dynamodb": "./scripts/test-dynamodb.sh",
     "ci:test-docker": "./scripts/test-docker-build.sh",
