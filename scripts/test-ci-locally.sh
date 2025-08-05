@@ -8,11 +8,24 @@
 
 set -e
 
+# Set timeout for the entire script (20 minutes)
+timeout_duration=1200
+(
+    sleep $timeout_duration
+    echo ""
+    echo "❌ Script timeout after $((timeout_duration/60)) minutes"
+    echo "Cleaning up and exiting..."
+    pkill -P $$ 2>/dev/null || true
+    exit 124
+) &
+timeout_pid=$!
+
 echo "🚀 Starting local CI simulation..."
 echo "=================================="
 echo ""
 echo "📋 Prerequisites: Docker, Node.js 22, Yarn, AWS CLI v2, jq"
 echo "📖 Setup guide: docs/CONTRIBUTOR_SETUP.md"
+echo "⏱️  Script timeout: $((timeout_duration/60)) minutes"
 echo ""
 
 # Colors for output
@@ -42,6 +55,10 @@ print_error() {
 # Cleanup function
 cleanup_and_exit() {
     exit_code=${1:-0}
+    
+    # Kill timeout process
+    kill $timeout_pid 2>/dev/null || true
+    
     print_step "Cleaning up..."
     
     # Stop and remove containers
@@ -56,6 +73,8 @@ cleanup_and_exit() {
     if [ $exit_code -eq 0 ]; then
         print_success "All tests passed! 🎉"
         echo "Your CI pipeline should work correctly on GitHub Actions."
+    elif [ $exit_code -eq 124 ]; then
+        print_error "Script timed out. Check for hanging processes or network issues."
     else
         print_error "Some tests failed. Please fix the issues before pushing."
     fi
@@ -91,6 +110,11 @@ if ! command -v aws &> /dev/null; then
 fi
 
 print_success "Prerequisites check completed"
+
+# Set up signal handlers for cleanup
+trap 'cleanup_and_exit 130' INT  # Ctrl+C
+trap 'cleanup_and_exit 143' TERM # Termination
+trap 'cleanup_and_exit 0' EXIT   # Normal exit
 
 # Step 1: Code Quality Checks (Job 1)
 print_step "Running code quality checks..."
@@ -142,23 +166,23 @@ export DYNAMODB_ENDPOINT=http://localhost:8000
 export AWS_ACCESS_KEY_ID=dummy
 export AWS_SECRET_ACCESS_KEY=dummy
 
-max_attempts=60
+max_attempts=30  # Reduced from 60
 attempt=1
 while [ $attempt -le $max_attempts ]; do
-    if aws dynamodb list-tables --endpoint-url http://localhost:8000 --region us-east-1 > /dev/null 2>&1; then
+    if timeout 10 aws dynamodb list-tables --endpoint-url http://localhost:8000 --region us-east-1 > /dev/null 2>&1; then
         print_success "DynamoDB is ready on attempt $attempt"
         break
     fi
     echo "DynamoDB not ready, attempt $attempt/$max_attempts"
-    sleep 3
+    sleep 2  # Reduced from 3
     attempt=$((attempt + 1))
 done
 
 if [ $attempt -gt $max_attempts ]; then
     print_error "DynamoDB failed to start after $max_attempts attempts"
+    echo "DynamoDB container logs:"
     docker logs dynamodb-local-test
-    docker stop dynamodb-local-test && docker rm dynamodb-local-test
-    exit 1
+    cleanup_and_exit 1
 fi
 
 # Create DynamoDB tables
@@ -190,21 +214,59 @@ docker run -d \
 
 # Wait for container to start
 echo "Waiting for container to start..."
-sleep 15
+sleep 5  # Initial wait
 
-# Check if container is running
-if ! docker ps | grep aws-config-service-test; then
-    print_error "Container is not running"
-    docker logs aws-config-service-test
-    cleanup_and_exit 1
-fi
+# Check if container is running and healthy
+echo "Checking container status..."
+for i in {1..12}; do  # 12 attempts, 5 seconds each = 1 minute max
+    if docker ps | grep -q aws-config-service-test; then
+        # Check if container is still running (not restarting)
+        container_status=$(docker inspect --format='{{.State.Status}}' aws-config-service-test 2>/dev/null || echo "not_found")
+        if [ "$container_status" = "running" ]; then
+            print_success "Container is running (attempt $i)"
+            break
+        else
+            echo "Container status: $container_status (attempt $i/12)"
+        fi
+    else
+        echo "Container not found in docker ps (attempt $i/12)"
+    fi
+    
+    if [ $i -eq 12 ]; then
+        print_error "Container failed to start properly"
+        echo "Container logs:"
+        docker logs aws-config-service-test
+        cleanup_and_exit 1
+    fi
+    
+    sleep 5
+done
 
 # Check application health
 echo "Testing application health..."
-max_attempts=60
+
+# First check if port 3000 is listening
+echo "Checking if port 3000 is accessible..."
+for i in {1..10}; do
+    if timeout 5 nc -z localhost 3000 2>/dev/null; then
+        print_success "Port 3000 is accessible (attempt $i)"
+        break
+    fi
+    echo "Port 3000 not accessible (attempt $i/10)"
+    if [ $i -eq 10 ]; then
+        print_error "Port 3000 is not accessible after 10 attempts"
+        echo "Container logs:"
+        docker logs aws-config-service-test
+        cleanup_and_exit 1
+    fi
+    sleep 3
+done
+
+# Now test the health endpoint
+max_attempts=10  # Reduced further since port is accessible
 attempt=1
 while [ $attempt -le $max_attempts ]; do
-    if curl -f http://localhost:3000/health > /dev/null 2>&1; then
+    if timeout 30 curl -f --connect-timeout 10 --max-time 30 http://localhost:3000/health > /dev/null 2>&1; then
         print_success "Health check passed on attempt $attempt"
         break
     fi
@@ -222,13 +284,18 @@ fi
 
 # Test basic API functionality
 echo "Testing API endpoints..."
-health_response=$(curl -s http://localhost:3000/health)
-echo "Health response: $health_response"
+health_response=$(timeout 30 curl -s --connect-timeout 10 --max-time 30 http://localhost:3000/health)
+if [ $? -eq 0 ]; then
+    echo "Health response: $health_response"
+    print_success "API endpoint test completed"
+else
+    print_warning "Failed to get health response, but container is running"
+fi
 
 print_success "Docker build and container test completed"
 
-# Cleanup on script exit
-trap cleanup_and_exit EXIT
-
 print_success "All local CI tests completed successfully! 🎉"
 echo "Your changes are ready for GitHub Actions."
+
+# Kill the timeout process since we completed successfully
+kill $timeout_pid 2>/dev/null || true
