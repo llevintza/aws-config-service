@@ -168,7 +168,10 @@ export class DynamoConfigService implements IConfigService {
     try {
       const command = new ScanCommand({
         TableName: this.tableName,
-        FilterExpression: 'tenant = :tenant AND cloudRegion = :cloudRegion',
+      const command = new QueryCommand({
+        TableName: this.tableName,
+        IndexName: 'tenant-cloudRegion-index', // Ensure this GSI exists
+        KeyConditionExpression: 'tenant = :tenant AND cloudRegion = :cloudRegion',
         ExpressionAttributeValues: {
           ':tenant': tenant,
           ':cloudRegion': cloudRegion,
