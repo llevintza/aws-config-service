@@ -100,14 +100,27 @@ jobs:
           echo "Test coverage would be generated here"
           # yarn test:coverage
 
+      - name: Debug secret availability
+        run: |
+          if [ -z "${{ secrets.CODE_QUALITY_REPORT_TOKEN }}" ]; then
+            echo "ERROR: Secret is NOT available"
+            exit 1
+          else
+            echo "Secret is available"
+          fi
+        env:
+          CODE_QUALITY_REPORT_TOKEN: ${{ secrets.CODE_QUALITY_REPORT_TOKEN }}
+
       - name: Upload coverage to Codecov
-        if: matrix.node-version == '22'
+        if: matrix.node-version == '22' && hashFiles('./coverage/lcov.info') != ''
         uses: codecov/codecov-action@v3
         with:
+          token: ${{ secrets.CODE_QUALITY_REPORT_TOKEN }}
           file: ./coverage/lcov.info
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: true
+        continue-on-error: true
 
   # Job 2: Docker Build and Security Scan
   docker:
