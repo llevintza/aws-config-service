@@ -1,11 +1,19 @@
-import Fastify, { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
+import Fastify from 'fastify';
+
 import { requestLoggingPlugin } from '../../plugins/request-logging';
 import { healthRoutes } from '../../routes/health';
+import type { HealthResponse } from '../../types';
+import { HealthStatus } from '../../types';
 
 describe('Health Endpoint Integration', () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
+    // Set test environment variables
+    process.env.NODE_ENV = 'test';
+    process.env.LOG_LEVEL = 'silent';
+
     app = Fastify({
       logger: false, // Disable logging in tests
     });
@@ -31,12 +39,16 @@ describe('Health Endpoint Integration', () => {
 
       expect(response.statusCode).toBe(200);
 
-      const body = JSON.parse(response.body);
+      const body: HealthResponse = JSON.parse(response.body) as HealthResponse;
       expect(body).toHaveProperty('status');
-      expect(body.status).toBe('healthy');
+      expect(body.status).toBe(HealthStatus.HEALTHY);
       expect(body).toHaveProperty('timestamp');
       expect(body).toHaveProperty('uptime');
       expect(body).toHaveProperty('version');
+      expect(body).toHaveProperty('message');
+      expect(typeof body.uptime).toBe('number');
+      expect(typeof body.timestamp).toBe('string');
+      expect(typeof body.version).toBe('string');
     });
   });
 

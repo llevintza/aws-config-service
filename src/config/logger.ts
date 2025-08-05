@@ -164,35 +164,50 @@ const errorRotateFileTransport = new DailyRotateFile({
 // Console transport with colors
 const consoleTransport = new transports.Console({
   format: consoleFormat,
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  level:
+    process.env.NODE_ENV === 'test' && process.env.LOG_LEVEL === 'silent'
+      ? 'error' // Use error level to minimize output in silent test mode
+      : process.env.NODE_ENV === 'production'
+        ? 'info'
+        : 'debug',
   handleExceptions: true,
   handleRejections: true,
+  silent: process.env.LOG_LEVEL === 'silent', // Respect silent mode
 });
 
 // Create the logger instance
+// In test environment, only use console transport to avoid file system issues
+const loggerTransports =
+  process.env.NODE_ENV === 'test'
+    ? [consoleTransport]
+    : [consoleTransport, dailyRotateFileTransport, errorRotateFileTransport];
+
 const logger = createLogger({
-  level: process.env.LOG_LEVEL ?? 'info',
+  level: process.env.LOG_LEVEL === 'silent' ? 'error' : (process.env.LOG_LEVEL ?? 'info'),
   format: format.combine(format.timestamp(), format.errors({ stack: true })),
-  transports: [consoleTransport, dailyRotateFileTransport, errorRotateFileTransport],
+  transports: loggerTransports,
   exitOnError: false,
+  silent: process.env.LOG_LEVEL === 'silent',
 });
 
-// Log rotation events
-dailyRotateFileTransport.on('rotate', (oldFilename: string, newFilename: string) => {
-  logger.info('Log file rotated', { oldFilename, newFilename });
-});
+// Log rotation events (only in non-test environments)
+if (process.env.NODE_ENV !== 'test') {
+  dailyRotateFileTransport.on('rotate', (oldFilename: string, newFilename: string) => {
+    logger.info('Log file rotated', { oldFilename, newFilename });
+  });
 
-dailyRotateFileTransport.on('new', (newFilename: string) => {
-  logger.info('New log file created', { filename: newFilename });
-});
+  dailyRotateFileTransport.on('new', (newFilename: string) => {
+    logger.info('New log file created', { filename: newFilename });
+  });
 
-errorRotateFileTransport.on('rotate', (oldFilename: string, newFilename: string) => {
-  logger.info('Error log file rotated', { oldFilename, newFilename });
-});
+  errorRotateFileTransport.on('rotate', (oldFilename: string, newFilename: string) => {
+    logger.info('Error log file rotated', { oldFilename, newFilename });
+  });
 
-errorRotateFileTransport.on('new', (newFilename: string) => {
-  logger.info('New error log file created', { filename: newFilename });
-}); // Add request ID middleware helper
+  errorRotateFileTransport.on('new', (newFilename: string) => {
+    logger.info('New error log file created', { filename: newFilename });
+  });
+} // Add request ID middleware helper
 export const createRequestLogger = (
   requestId: string,
 ): {
@@ -201,6 +216,16 @@ export const createRequestLogger = (
   error: (message: string, meta?: unknown) => void;
   debug: (message: string, meta?: unknown) => void;
 } => {
+  // Return no-op functions in silent test mode
+  if (process.env.LOG_LEVEL === 'silent') {
+    return {
+      info: (): void => {},
+      warn: (): void => {},
+      error: (): void => {},
+      debug: (): void => {},
+    };
+  }
+
   return {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     info: (message: string, meta?: any): void => {
