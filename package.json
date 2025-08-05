@@ -48,7 +48,10 @@
     "check-prerequisites": "./scripts/setup/check-prerequisites.sh",
     "ci:test-local": "./scripts/ci/test-ci-locally.sh",
     "ci:test-dynamodb": "./scripts/dynamodb/test-dynamodb.sh",
-    "ci:test-docker": "./scripts/ci/test-docker-build.sh",
+    "ci:test-docker": "./scripts/testing/test-docker-job-locally.sh",
+    "test:dynamodb-connectivity": "./scripts/testing/test-dynamodb-connectivity.sh",
+    "verify:github-actions-fix": "./scripts/testing/verify-github-actions-fix.sh",
+    "ci:test-docker-build": "./scripts/ci/test-docker-build.sh",
     "ci:test-compose": "docker-compose -f docker-compose.ci-test.yml up --build --abort-on-container-exit",
     "ci:quality-check": "yarn type-check && yarn lint:check && yarn format:check"
   },

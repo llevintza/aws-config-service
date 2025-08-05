@@ -240,34 +240,40 @@ jobs:
           while [ $attempt -le $max_attempts ]; do
             echo "Attempt $attempt/$max_attempts: Testing DynamoDB connectivity"
             
-            # Test basic connectivity first
-            if curl -f http://localhost:8000/ > /dev/null 2>&1; then
-              echo "✅ DynamoDB port is accessible"
-              
-              # Test AWS CLI functionality
-              if aws dynamodb list-tables --endpoint-url http://localhost:8000 --region us-east-1 > /dev/null 2>&1; then
-                echo "✅ DynamoDB is ready and responding to AWS CLI"
-                break
-              else
-                echo "⚠️ DynamoDB port accessible but AWS CLI failed"
-              fi
+            # Test AWS CLI functionality directly (DynamoDB Local doesn't respond to basic HTTP requests)
+            if aws dynamodb list-tables --endpoint-url http://localhost:8000 --region us-east-1 > /dev/null 2>&1; then
+              echo "✅ DynamoDB is ready and responding to AWS CLI"
+              break
             else
-              echo "⚠️ DynamoDB port not accessible"
+              echo "⚠️ DynamoDB not responding to AWS CLI - attempt $attempt/$max_attempts"
+              
+              # Show more debug info every 10 attempts
+              if [ $((attempt % 10)) -eq 0 ]; then
+                echo "=== Debug Info (attempt $attempt) ==="
+                echo "DynamoDB container status:"
+                docker ps | grep dynamodb || echo "No DynamoDB container found"
+                echo "Port 8000 status:"
+                netstat -tlnp | grep :8000 || echo "Port 8000 not listening"
+                echo "Recent DynamoDB logs:"
+                docker logs --tail 5 $(docker ps -q --filter "ancestor=amazon/dynamodb-local:latest") 2>/dev/null || echo "No container logs available"
+              fi
             fi
             
-            sleep 5
+            sleep 3
             attempt=$((attempt + 1))
           done
 
           if [ $attempt -gt $max_attempts ]; then
             echo "❌ DynamoDB failed to respond after $max_attempts attempts"
-            echo "=== Debug Information ==="
+            echo "=== Final Debug Information ==="
             echo "Docker containers:"
             docker ps -a
             echo "Network status:"
             netstat -tlnp | grep :8000
             echo "DynamoDB container logs:"
             docker logs $(docker ps -q --filter "ancestor=amazon/dynamodb-local:latest") 2>/dev/null || echo "No DynamoDB container logs found"
+            echo "AWS CLI version:"
+            aws --version
             exit 1
           fi
         env:
