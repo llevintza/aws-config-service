@@ -11,7 +11,7 @@ interface ConfigParams {
   configName: string;
 }
 
-export function configRoutes(fastify: FastifyInstance): void {
+export function configRoutes(fastify: FastifyInstance, _options: unknown, done: () => void): void {
   // GET /config/{tenant}/cloud/{cloudRegion}/service/{service}/config/{configName}
   fastify.get<{ Params: ConfigParams }>(
     '/config/:tenant/cloud/:cloudRegion/service/:service/config/:configName',
@@ -147,4 +147,7 @@ export function configRoutes(fastify: FastifyInstance): void {
       }
     },
   );
+
+  // Call done to indicate plugin is ready
+  done();
 }

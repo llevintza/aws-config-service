@@ -39,6 +39,30 @@ print_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
+# Cleanup function
+cleanup_and_exit() {
+    exit_code=${1:-0}
+    print_step "Cleaning up..."
+    
+    # Stop and remove containers
+    docker stop aws-config-service-test 2>/dev/null || true
+    docker rm aws-config-service-test 2>/dev/null || true
+    docker stop dynamodb-local-test 2>/dev/null || true
+    docker rm dynamodb-local-test 2>/dev/null || true
+    
+    # Remove test image
+    docker rmi aws-config-service:test 2>/dev/null || true
+    
+    if [ $exit_code -eq 0 ]; then
+        print_success "All tests passed! 🎉"
+        echo "Your CI pipeline should work correctly on GitHub Actions."
+    else
+        print_error "Some tests failed. Please fix the issues before pushing."
+    fi
+    
+    exit $exit_code
+}
+
 # Check prerequisites
 print_step "Checking prerequisites..."
 
@@ -104,6 +128,11 @@ fi
 
 # Start DynamoDB Local
 print_step "Starting DynamoDB Local..."
+
+# Clean up any existing containers first
+docker stop dynamodb-local-test 2>/dev/null || true
+docker rm dynamodb-local-test 2>/dev/null || true
+
 docker run -d --name dynamodb-local-test -p 8000:8000 amazon/dynamodb-local:latest
 
 # Wait for DynamoDB to be ready
@@ -145,6 +174,11 @@ echo "Building Docker image..."
 docker build -t aws-config-service:test .
 
 echo "Testing Docker container startup..."
+
+# Clean up any existing test containers first
+docker stop aws-config-service-test 2>/dev/null || true
+docker rm aws-config-service-test 2>/dev/null || true
+
 docker run -d \
     --name aws-config-service-test \
     --network host \
@@ -192,30 +226,6 @@ health_response=$(curl -s http://localhost:3000/health)
 echo "Health response: $health_response"
 
 print_success "Docker build and container test completed"
-
-# Cleanup function
-cleanup_and_exit() {
-    exit_code=${1:-0}
-    print_step "Cleaning up..."
-    
-    # Stop and remove containers
-    docker stop aws-config-service-test 2>/dev/null || true
-    docker rm aws-config-service-test 2>/dev/null || true
-    docker stop dynamodb-local-test 2>/dev/null || true
-    docker rm dynamodb-local-test 2>/dev/null || true
-    
-    # Remove test image
-    docker rmi aws-config-service:test 2>/dev/null || true
-    
-    if [ $exit_code -eq 0 ]; then
-        print_success "All tests passed! 🎉"
-        echo "Your CI pipeline should work correctly on GitHub Actions."
-    else
-        print_error "Some tests failed. Please fix the issues before pushing."
-    fi
-    
-    exit $exit_code
-}
 
 # Cleanup on script exit
 trap cleanup_and_exit EXIT

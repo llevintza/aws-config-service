@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 import healthSchemas from '../schemas/health.json';
 
-export function healthRoutes(fastify: FastifyInstance): void {
+export function healthRoutes(fastify: FastifyInstance, _options: unknown, done: () => void): void {
   // Health check endpoint
   fastify.get(
     '/health',
@@ -50,4 +50,7 @@ export function healthRoutes(fastify: FastifyInstance): void {
       void reply.redirect('/docs');
     },
   );
+
+  // Call done to indicate plugin is ready
+  done();
 }

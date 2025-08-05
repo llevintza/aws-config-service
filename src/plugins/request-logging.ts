@@ -10,7 +10,11 @@ declare module 'fastify' {
   }
 }
 
-function requestLoggingPluginFn(fastify: FastifyInstance): void {
+function requestLoggingPluginFn(
+  fastify: FastifyInstance,
+  _options: unknown,
+  done: () => void,
+): void {
   // Hook to add request logger and capture start time
   fastify.addHook('preHandler', (request: FastifyRequest) => {
     request.startTime = Date.now();
@@ -104,6 +108,9 @@ function requestLoggingPluginFn(fastify: FastifyInstance): void {
       });
     },
   );
+
+  // Call done to indicate plugin is ready
+  done();
 }
 
 // Export the plugin with proper encapsulation
