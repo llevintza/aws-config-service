@@ -20,6 +20,27 @@ interface ClientInfo {
   ip?: string;
 }
 
+// Safe getter for nested properties
+function safeGet(obj: unknown, path: string): unknown {
+  if (obj === null || obj === undefined || typeof obj !== 'object') {
+    return undefined;
+  }
+  return (obj as Record<string, unknown>)[path];
+}
+
+// Type guard functions
+function isHttpInfo(obj: unknown): obj is HttpInfo {
+  return obj !== null && obj !== undefined && typeof obj === 'object';
+}
+
+function isPerformanceInfo(obj: unknown): obj is PerformanceInfo {
+  return obj !== null && obj !== undefined && typeof obj === 'object';
+}
+
+function isClientInfo(obj: unknown): obj is ClientInfo {
+  return obj !== null && obj !== undefined && typeof obj === 'object';
+}
+
 // Ensure logs directory exists
 const logsDir = path.join(process.cwd(), 'logs');
 if (!fs.existsSync(logsDir)) {
@@ -31,9 +52,25 @@ const consoleFormat = format.combine(
   format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   format.errors({ stack: true }),
   format.colorize({ all: true }),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  format.printf((info: any) => {
-    const { timestamp, level, message, stack, event, requestId, ...meta } = info;
+  format.printf((info: unknown) => {
+    // Type-safe extraction from info object
+    const infoObj = info as Record<string, unknown>;
+    const timestamp = infoObj.timestamp as string;
+    const level = infoObj.level as string;
+    const message = infoObj.message as string;
+    const stack = infoObj.stack as string | undefined;
+    const event = infoObj.event as string | undefined;
+    const requestId = infoObj.requestId as string | undefined;
+
+    // Create clean meta object
+    const meta = { ...infoObj };
+    delete meta.timestamp;
+    delete meta.level;
+    delete meta.message;
+    delete meta.stack;
+    delete meta.event;
+    delete meta.requestId;
+
     let logMessage = `${timestamp} [${level}]`;
 
     // Add request ID if available
@@ -57,26 +94,22 @@ const consoleFormat = format.combine(
     const metaKeys = Object.keys(meta);
     if (metaKeys.length > 0) {
       // Format specific semantic fields nicely
-      if (meta.http !== null && meta.http !== undefined && typeof meta.http === 'object') {
-        const http = meta.http as HttpInfo;
-        logMessage += `\n  HTTP: ${http.method ?? 'UNKNOWN'} ${http.url ?? 'UNKNOWN'}`;
-        if (http.statusCode !== null && http.statusCode !== undefined) {
-          logMessage += ` → ${http.statusCode}`;
+      const httpInfo = safeGet(meta, 'http');
+      if (isHttpInfo(httpInfo)) {
+        logMessage += `\n  HTTP: ${httpInfo.method ?? 'UNKNOWN'} ${httpInfo.url ?? 'UNKNOWN'}`;
+        if (httpInfo.statusCode !== null && httpInfo.statusCode !== undefined) {
+          logMessage += ` → ${httpInfo.statusCode}`;
         }
       }
 
-      if (
-        meta.performance !== null &&
-        meta.performance !== undefined &&
-        typeof meta.performance === 'object'
-      ) {
-        const perf = meta.performance as PerformanceInfo;
-        logMessage += `\n  Performance: ${perf.responseTime ?? 'UNKNOWN'}${perf.responseTimeUnit ?? 'ms'}`;
+      const performanceInfo = safeGet(meta, 'performance');
+      if (isPerformanceInfo(performanceInfo)) {
+        logMessage += `\n  Performance: ${performanceInfo.responseTime ?? 'UNKNOWN'}${performanceInfo.responseTimeUnit ?? 'ms'}`;
       }
 
-      if (meta.client !== null && meta.client !== undefined && typeof meta.client === 'object') {
-        const client = meta.client as ClientInfo;
-        logMessage += `\n  Client: ${client.ip ?? 'UNKNOWN'}`;
+      const clientInfo = safeGet(meta, 'client');
+      if (isClientInfo(clientInfo)) {
+        logMessage += `\n  Client: ${clientInfo.ip ?? 'UNKNOWN'}`;
       }
 
       // Show remaining metadata as JSON
