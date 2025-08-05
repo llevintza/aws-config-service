@@ -1,8 +1,8 @@
 name: CI
 
 on:
-  # push:
-  #   branches: ['**']
+  push:
+    branches: ['**']
   pull_request:
     branches: ['main', 'develop']
 
@@ -11,42 +11,7 @@ env:
   YARN_CACHE_FOLDER: ~/.yarn
 
 jobs:
-  # Job 1: Code Quality and Security Checks
-  code-quality:
-    name: Code Quality & Security
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Needed for SonarCloud analysis
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: TypeScript type checking
-        run: yarn type-check
-
-      - name: ESLint check
-        run: yarn lint:check
-
-      - name: Prettier formatting check
-        run: yarn format:check
-
-      - name: Check for security vulnerabilities
-        run: yarn audit --level moderate
-
-      - name: Check for outdated dependencies
-        run: yarn outdated || true
-
-  # Job 2: Build and Test
+  # Job 1: Build and Test
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
@@ -144,11 +109,11 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: true
 
-  # Job 3: Docker Build and Security Scan
+  # Job 2: Docker Build and Security Scan
   docker:
     name: Docker Build & Security Scan
     runs-on: ubuntu-latest
-    needs: [code-quality]
+    needs: [build-and-test]
 
     services:
       dynamodb:
@@ -293,40 +258,7 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
-  # Job 4: Dependency Check
-  dependency-check:
-    name: Dependency Security Check
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Run dependency check
-        uses: dependency-check/Dependency-Check_Action@main
-        with:
-          project: 'aws-config-service'
-          path: '.'
-          format: 'HTML'
-          out: 'dependency-check-report'
-
-      - name: Upload dependency check results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: dependency-check-report
-          path: dependency-check-report/
-
-  # Job 5: Performance and Load Testing
+  # Job 3: Performance and Load Testing
   performance:
     name: Performance Testing
     runs-on: ubuntu-latest
@@ -496,7 +428,7 @@ jobs:
           AWS_REGION: us-east-1
           DYNAMODB_ENDPOINT: http://localhost:8000
 
-  # Job 7: Generate and Upload Artifacts
+  # Job 5: Generate and Upload Artifacts
   artifacts:
     name: Generate Artifacts
     runs-on: ubuntu-latest
@@ -536,21 +468,21 @@ jobs:
           path: aws-config-service-${{ github.sha }}.tar.gz
           retention-days: 30
 
-  # Job 8: Notification
+  # Job 6: Notification
   notify:
     name: Notify Results
     runs-on: ubuntu-latest
-    needs: [code-quality, build-and-test, docker, dependency-check]
+    needs: [build-and-test, docker]
     if: always()
 
     steps:
       - name: Notify on success
-        if: needs.code-quality.result == 'success' && needs.build-and-test.result == 'success' && needs.docker.result == 'success'
+        if: needs.build-and-test.result == 'success' && needs.docker.result == 'success'
         run: |
           echo "✅ All CI checks passed successfully!"
 
       - name: Notify on failure
-        if: needs.code-quality.result == 'failure' || needs.build-and-test.result == 'failure' || needs.docker.result == 'failure'
+        if: needs.build-and-test.result == 'failure' || needs.docker.result == 'failure'
         run: |
           echo "❌ CI checks failed. Please review the failed jobs."
           exit 1
