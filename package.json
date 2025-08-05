@@ -44,7 +44,12 @@
     "docker:dynamodb:down": "docker-compose -f docker-compose.dynamodb.yml down",
     "dynamodb:create-table": "ts-node scripts/create-table.ts",
     "dynamodb:migrate": "ts-node scripts/migrate-to-dynamodb.ts",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "ci:test-local": "./scripts/test-ci-locally.sh",
+    "ci:test-dynamodb": "./scripts/test-dynamodb.sh",
+    "ci:test-docker": "./scripts/test-docker-build.sh",
+    "ci:test-compose": "docker-compose -f docker-compose.ci-test.yml up --build --abort-on-container-exit",
+    "ci:quality-check": "yarn type-check && yarn lint:check && yarn format:check"
   },
   "keywords": [
     "nodejs",
