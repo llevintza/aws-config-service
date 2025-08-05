@@ -194,63 +194,106 @@ jobs:
           AWS_ACCESS_KEY_ID: dummy
           AWS_SECRET_ACCESS_KEY: dummy
 
-      - name: Test Docker container startup
+      - name: Install testing tools
         run: |
-          # Install jq and AWS CLI v2 for testing
           sudo apt-get update && sudo apt-get install -y jq unzip
+          echo "✅ Testing tools installed successfully"
 
-          # Install AWS CLI v2 (or update if already installed)
+      - name: Install AWS CLI v2
+        run: |
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
           sudo ./aws/install --update || sudo ./aws/install
+          aws --version
+          echo "✅ AWS CLI v2 installed successfully"
 
-          # Debug: Check if DynamoDB container is running
+      - name: Verify DynamoDB container status
+        run: |
           echo "=== DynamoDB Container Status ==="
-          docker ps | grep dynamodb || echo "No DynamoDB container found"
+          if docker ps | grep dynamodb; then
+            echo "✅ DynamoDB container is running"
+          else
+            echo "❌ DynamoDB container not found"
+            echo "All containers:"
+            docker ps -a
+            exit 1
+          fi
 
-          # Debug: Check network connectivity to DynamoDB
+      - name: Check network connectivity
+        run: |
           echo "=== Network Connectivity Test ==="
-          netstat -tlnp | grep :8000 || echo "Port 8000 not listening"
+          if netstat -tlnp | grep :8000; then
+            echo "✅ Port 8000 is listening"
+          else
+            echo "❌ Port 8000 is not listening"
+            echo "All listening ports:"
+            netstat -tlnp
+            exit 1
+          fi
 
-          # Wait for DynamoDB to be ready with better check
-          echo "Waiting for DynamoDB to be ready..."
+      - name: Wait for DynamoDB to respond
+        run: |
+          echo "Waiting for DynamoDB to respond..."
           max_attempts=30
           attempt=1
+
           while [ $attempt -le $max_attempts ]; do
-            # First check if port is accessible
+            echo "Attempt $attempt/$max_attempts: Testing DynamoDB connectivity"
+            
+            # Test basic connectivity first
             if curl -f http://localhost:8000/ > /dev/null 2>&1; then
-              echo "DynamoDB port is accessible on attempt $attempt"
-              # Then check if AWS CLI can list tables
+              echo "✅ DynamoDB port is accessible"
+              
+              # Test AWS CLI functionality
               if aws dynamodb list-tables --endpoint-url http://localhost:8000 --region us-east-1 > /dev/null 2>&1; then
-                echo "DynamoDB is ready on attempt $attempt"
+                echo "✅ DynamoDB is ready and responding to AWS CLI"
                 break
               else
-                echo "DynamoDB port accessible but AWS CLI failed on attempt $attempt"
+                echo "⚠️ DynamoDB port accessible but AWS CLI failed"
               fi
             else
-              echo "DynamoDB port not accessible on attempt $attempt"
+              echo "⚠️ DynamoDB port not accessible"
             fi
+            
             sleep 5
             attempt=$((attempt + 1))
           done
 
           if [ $attempt -gt $max_attempts ]; then
-            echo "DynamoDB failed to start after $max_attempts attempts"
+            echo "❌ DynamoDB failed to respond after $max_attempts attempts"
             echo "=== Debug Information ==="
-            echo "Docker services:"
+            echo "Docker containers:"
             docker ps -a
             echo "Network status:"
             netstat -tlnp | grep :8000
             echo "DynamoDB container logs:"
-            docker logs $(docker ps -q --filter "ancestor=amazon/dynamodb-local:latest") || echo "No DynamoDB container logs found"
+            docker logs $(docker ps -q --filter "ancestor=amazon/dynamodb-local:latest") 2>/dev/null || echo "No DynamoDB container logs found"
             exit 1
           fi
+        env:
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: dummy
+          AWS_SECRET_ACCESS_KEY: dummy
 
-          # Test DynamoDB connectivity before starting our container
-          echo "=== Testing DynamoDB connectivity ==="
-          aws dynamodb list-tables --endpoint-url http://localhost:8000 --region us-east-1
+      - name: Verify DynamoDB tables exist
+        run: |
+          echo "=== Verifying DynamoDB tables ==="
+          tables=$(aws dynamodb list-tables --endpoint-url http://localhost:8000 --region us-east-1 --output text --query 'TableNames')
+          echo "Available tables: $tables"
 
-          # Start the container in detached mode
+          if [ -z "$tables" ] || [ "$tables" = "None" ]; then
+            echo "❌ No DynamoDB tables found"
+            exit 1
+          else
+            echo "✅ DynamoDB tables are available"
+          fi
+        env:
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: dummy
+          AWS_SECRET_ACCESS_KEY: dummy
+
+      - name: Build and start application container
+        run: |
           echo "=== Starting application container ==="
           docker run -d \
             --name aws-config-service-test \
@@ -263,75 +306,84 @@ jobs:
             -e AWS_SECRET_ACCESS_KEY=dummy \
             aws-config-service:${{ github.sha }}
 
-          # Wait for container to start
+          echo "✅ Container started with ID: $(docker ps -q --filter name=aws-config-service-test)"
+
+      - name: Wait for container to be ready
+        run: |
           echo "Waiting for container to start..."
           sleep 20
 
-          # Check if container is running
-          echo "=== Container Status Check ==="
+          # Check if container is still running
           if ! docker ps | grep aws-config-service-test; then
-            echo "Container is not running"
+            echo "❌ Container is not running"
             echo "Container logs:"
             docker logs aws-config-service-test
-            echo "Container inspection:"
-            docker inspect aws-config-service-test
             exit 1
           fi
 
-          # Show container logs for debugging
-          echo "=== Container logs ==="
-          docker logs aws-config-service-test
+          echo "✅ Container is running"
+          echo "=== Container Status ==="
+          docker ps | grep aws-config-service-test
 
-          # Check application health with retry logic
+      - name: Test application health endpoint
+        run: |
           echo "=== Testing application health ==="
           max_attempts=60
           attempt=1
+
           while [ $attempt -le $max_attempts ]; do
             if curl -f http://localhost:3000/health > /dev/null 2>&1; then
-              echo "Health check passed on attempt $attempt"
+              echo "✅ Health check passed on attempt $attempt"
               break
             fi
-            echo "Health check failed, attempt $attempt/$max_attempts"
-            # Show recent logs on failure
+            
+            echo "⚠️ Health check failed, attempt $attempt/$max_attempts"
+            
+            # Show logs every 10 attempts
             if [ $((attempt % 10)) -eq 0 ]; then
               echo "Recent container logs:"
-              docker logs --tail 20 aws-config-service-test
+              docker logs --tail 10 aws-config-service-test
             fi
+            
             sleep 2
             attempt=$((attempt + 1))
           done
 
           if [ $attempt -gt $max_attempts ]; then
-            echo "Health check failed after $max_attempts attempts"
-            echo "=== Final Debug Information ==="
-            echo "Container logs:"
+            echo "❌ Health check failed after $max_attempts attempts"
+            echo "=== Final Container Logs ==="
             docker logs aws-config-service-test
-            echo "Container status:"
-            docker ps -a | grep aws-config-service-test
-            echo "Network connectivity:"
-            netstat -tlnp | grep -E ":(3000|8000)"
-            echo "Process list:"
-            ps aux | grep -E "(node|docker)"
             exit 1
           fi
 
-          # Test basic API functionality
+      - name: Test API functionality
+        run: |
           echo "=== Testing API endpoints ==="
           health_response=$(curl -s http://localhost:3000/health)
           echo "Health response: $health_response"
-          echo "$health_response" | jq . || echo "Response is not valid JSON"
 
-          # Test DynamoDB connectivity from within container
+          if echo "$health_response" | jq . > /dev/null 2>&1; then
+            echo "✅ API returned valid JSON"
+          else
+            echo "⚠️ API response is not valid JSON"
+          fi
+
+      - name: Test container DynamoDB connectivity
+        run: |
           echo "=== Testing DynamoDB connectivity from container ==="
-          docker exec aws-config-service-test sh -c "curl -f http://localhost:8000/ > /dev/null 2>&1" && echo "DynamoDB accessible from container" || echo "DynamoDB not accessible from container"
+          if docker exec aws-config-service-test sh -c "curl -f http://localhost:8000/ > /dev/null 2>&1"; then
+            echo "✅ DynamoDB accessible from container"
+          else
+            echo "⚠️ DynamoDB not accessible from container (this may be expected)"
+          fi
 
-          # Test AWS CLI from within container
-          docker exec aws-config-service-test sh -c "which aws" || echo "AWS CLI not available in container"
-
-          # Clean up
-          echo "=== Cleaning up ==="
-          docker stop aws-config-service-test
-          docker rm aws-config-service-test
+      - name: Cleanup test container
+        if: always()
+        run: |
+          echo "=== Cleaning up test container ==="
+          docker stop aws-config-service-test || true
+          docker rm aws-config-service-test || true
+          echo "✅ Cleanup completed"
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
