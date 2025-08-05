@@ -263,7 +263,7 @@ for i in {1..10}; do
 done
 
 # Now test the health endpoint
-max_attempts=10  # Reduced further since port is accessible
+max_attempts=10
 attempt=1
 while [ $attempt -le $max_attempts ]; do
     if timeout 30 curl -f --connect-timeout 10 --max-time 30 http://localhost:3000/health > /dev/null 2>&1; then
