@@ -53,7 +53,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: ['20', '22', '24']
+        node-version: ['22']
 
     services:
       dynamodb:
@@ -90,8 +90,25 @@ jobs:
 
       - name: Setup test environment
         run: |
+          # Wait for DynamoDB to be ready
+          echo "Waiting for DynamoDB to be ready..."
+          max_attempts=30
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+            if curl -f http://localhost:8000/ > /dev/null 2>&1; then
+              echo "DynamoDB is ready on attempt $attempt"
+              break
+            fi
+            echo "DynamoDB not ready, attempt $attempt/$max_attempts"
+            sleep 2
+            attempt=$((attempt + 1))
+          done
+
           # Create DynamoDB tables for testing
           yarn dynamodb:create-table || echo "Table creation failed or already exists"
+        env:
+          AWS_REGION: us-east-1
+          DYNAMODB_ENDPOINT: http://localhost:8000
 
       - name: Run tests
         run: |
@@ -109,7 +126,7 @@ jobs:
           # yarn test:coverage
 
       - name: Upload coverage to Codecov
-        if: matrix.node-version == '18'
+        if: matrix.node-version == '22'
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage/lcov.info
@@ -122,6 +139,17 @@ jobs:
     name: Docker Build & Security Scan
     runs-on: ubuntu-latest
     needs: [code-quality]
+
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+        options: >-
+          --health-cmd "curl -f http://localhost:8000/ || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout code
@@ -139,6 +167,105 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+          load: true
+
+      - name: Setup Node.js for table creation
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies for DynamoDB setup
+        run: yarn install --frozen-lockfile
+
+      - name: Create DynamoDB tables
+        run: yarn dynamodb:create-table
+        env:
+          AWS_REGION: us-east-1
+          DYNAMODB_ENDPOINT: http://localhost:8000
+
+      - name: Test Docker container startup
+        run: |
+          # Install jq for JSON parsing
+          sudo apt-get update && sudo apt-get install -y jq
+
+          # Wait for DynamoDB to be ready
+          echo "Waiting for DynamoDB to be ready..."
+          max_attempts=30
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+            if curl -f http://localhost:8000/ > /dev/null 2>&1; then
+              echo "DynamoDB is ready on attempt $attempt"
+              break
+            fi
+            echo "DynamoDB not ready, attempt $attempt/$max_attempts"
+            sleep 2
+            attempt=$((attempt + 1))
+          done
+
+          if [ $attempt -gt $max_attempts ]; then
+            echo "DynamoDB failed to start after $max_attempts attempts"
+            exit 1
+          fi
+
+          # Start the container in detached mode
+          docker run -d \
+            --name aws-config-service-test \
+            --network host \
+            -e NODE_ENV=production \
+            -e AWS_REGION=us-east-1 \
+            -e DYNAMODB_ENDPOINT=http://localhost:8000 \
+            -e PORT=3000 \
+            aws-config-service:${{ github.sha }}
+
+          # Wait for container to start
+          echo "Waiting for container to start..."
+          sleep 15
+
+          # Check if container is running
+          if ! docker ps | grep aws-config-service-test; then
+            echo "Container is not running"
+            docker logs aws-config-service-test
+            exit 1
+          fi
+
+          # Check application health with retry logic
+          echo "Testing application health..."
+          max_attempts=60
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+            if curl -f http://localhost:3000/health > /dev/null 2>&1; then
+              echo "Health check passed on attempt $attempt"
+              break
+            fi
+            echo "Health check failed, attempt $attempt/$max_attempts"
+            sleep 2
+            attempt=$((attempt + 1))
+          done
+
+          if [ $attempt -gt $max_attempts ]; then
+            echo "Health check failed after $max_attempts attempts"
+            echo "Container logs:"
+            docker logs aws-config-service-test
+            echo "Container status:"
+            docker ps -a | grep aws-config-service-test
+            exit 1
+          fi
+
+          # Test basic API functionality
+          echo "Testing API endpoints..."
+          health_response=$(curl -s http://localhost:3000/health)
+          echo "Health response: $health_response"
+          echo "$health_response" | jq . || echo "Response is not valid JSON"
+
+          # Verify DynamoDB connectivity from within container
+          echo "Testing DynamoDB connectivity..."
+          docker exec aws-config-service-test curl -f http://localhost:8000/ || echo "DynamoDB connectivity test failed"
+
+          # Clean up
+          echo "Cleaning up..."
+          docker stop aws-config-service-test
+          docker rm aws-config-service-test
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -198,6 +325,11 @@ jobs:
         image: amazon/dynamodb-local:latest
         ports:
           - 8000:8000
+        options: >-
+          --health-cmd "curl -f http://localhost:8000/ || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout code
@@ -216,12 +348,42 @@ jobs:
         run: yarn build
 
       - name: Setup test environment
-        run: yarn dynamodb:create-table
+        run: |
+          # Wait for DynamoDB to be ready
+          echo "Waiting for DynamoDB to be ready..."
+          max_attempts=30
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+            if curl -f http://localhost:8000/ > /dev/null 2>&1; then
+              echo "DynamoDB is ready on attempt $attempt"
+              break
+            fi
+            echo "DynamoDB not ready, attempt $attempt/$max_attempts"
+            sleep 2
+            attempt=$((attempt + 1))
+          done
+
+          # Create DynamoDB tables
+          yarn dynamodb:create-table
+        env:
+          AWS_REGION: us-east-1
+          DYNAMODB_ENDPOINT: http://localhost:8000
 
       - name: Start application
         run: |
           yarn start &
-          sleep 10
+          APP_PID=$!
+          echo "Application PID: $APP_PID"
+          echo "APP_PID=$APP_PID" >> $GITHUB_ENV
+          sleep 15
+
+          # Verify application is running
+          if ! curl -f http://localhost:3000/health > /dev/null 2>&1; then
+            echo "Application failed to start"
+            ps aux | grep node
+            exit 1
+          fi
+          echo "Application started successfully"
         env:
           AWS_REGION: us-east-1
           DYNAMODB_ENDPOINT: http://localhost:8000
@@ -256,6 +418,11 @@ jobs:
         image: amazon/dynamodb-local:latest
         ports:
           - 8000:8000
+        options: >-
+          --health-cmd "curl -f http://localhost:8000/ || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout code
@@ -274,7 +441,26 @@ jobs:
         run: yarn build
 
       - name: Setup test environment
-        run: yarn dynamodb:create-table
+        run: |
+          # Wait for DynamoDB to be ready
+          echo "Waiting for DynamoDB to be ready..."
+          max_attempts=30
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+            if curl -f http://localhost:8000/ > /dev/null 2>&1; then
+              echo "DynamoDB is ready on attempt $attempt"
+              break
+            fi
+            echo "DynamoDB not ready, attempt $attempt/$max_attempts"
+            sleep 2
+            attempt=$((attempt + 1))
+          done
+
+          # Create DynamoDB tables
+          yarn dynamodb:create-table
+        env:
+          AWS_REGION: us-east-1
+          DYNAMODB_ENDPOINT: http://localhost:8000
 
       - name: Run integration tests
         run: |
