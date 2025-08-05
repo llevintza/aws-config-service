@@ -85,12 +85,12 @@ jobs:
 
       - name: Setup test environment
         run: |
-          # Install AWS CLI v2 for DynamoDB checks
-          echo "Installing AWS CLI v2..."
+          # Install AWS CLI v2 for DynamoDB checks (or update if already installed)
+          echo "Installing/updating AWS CLI v2..."
           sudo apt-get update && sudo apt-get install -y unzip
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
-          sudo ./aws/install
+          sudo ./aws/install --update || sudo ./aws/install
 
           # Wait for DynamoDB to be ready with better check
           echo "Waiting for DynamoDB to be ready..."
@@ -196,10 +196,10 @@ jobs:
           # Install jq and AWS CLI v2 for testing
           sudo apt-get update && sudo apt-get install -y jq unzip
 
-          # Install AWS CLI v2
+          # Install AWS CLI v2 (or update if already installed)
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
-          sudo ./aws/install
+          sudo ./aws/install --update || sudo ./aws/install
 
           # Wait for DynamoDB to be ready with better check
           echo "Waiting for DynamoDB to be ready..."
@@ -360,10 +360,10 @@ jobs:
           # Install AWS CLI v2 for DynamoDB checks
           sudo apt-get update && sudo apt-get install -y unzip
 
-          # Install AWS CLI v2
+          # Install AWS CLI v2 (or update if already installed)
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
-          sudo ./aws/install
+          sudo ./aws/install --update || sudo ./aws/install
 
           # Wait for DynamoDB to be ready with better check
           echo "Waiting for DynamoDB to be ready..."
@@ -459,10 +459,10 @@ jobs:
           # Install AWS CLI v2 for DynamoDB checks
           sudo apt-get update && sudo apt-get install -y unzip
 
-          # Install AWS CLI v2
+          # Install AWS CLI v2 (or update if already installed)
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
-          sudo ./aws/install
+          sudo ./aws/install --update || sudo ./aws/install
 
           # Wait for DynamoDB to be ready with better check
           echo "Waiting for DynamoDB to be ready..."
