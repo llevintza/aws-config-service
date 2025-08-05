@@ -1,11 +1,16 @@
 #!/bin/bash
 
 echo "🚀 Setting up AWS Config Service..."
+echo ""
 
-# Check if yarn is installed
-if ! command -v yarn &> /dev/null; then
-    echo "❌ Yarn is not installed. Please install yarn first:"
-    echo "   npm install -g yarn"
+# Check prerequisites first
+echo "🔍 Checking prerequisites..."
+if command -v node &> /dev/null && command -v yarn &> /dev/null; then
+    echo "✅ Node.js and Yarn found"
+else
+    echo "❌ Missing prerequisites. Please run:"
+    echo "   yarn check-prerequisites"
+    echo "   # or see docs/CONTRIBUTOR_SETUP.md for complete setup"
     exit 1
 fi
 
@@ -17,6 +22,11 @@ yarn build
 
 echo "✅ Setup complete!"
 echo ""
+echo "💡 Next steps:"
+echo "   yarn check-prerequisites  # Verify all tools for CI testing"
+echo "   yarn dev                  # Start development server"
+echo "   yarn ci:test-local        # Test CI pipeline locally (requires Docker, AWS CLI)"
+echo ""
 echo "🏃 To run the service locally:"
 echo "   yarn start:dev  (builds and starts)"
 echo "   yarn dev        (development mode with hot reload)"
@@ -25,6 +35,11 @@ echo "   yarn start      (production mode, requires build first)"
 echo ""
 echo "🐳 To run with Docker:"
 echo "   yarn docker:up"
+echo ""
+echo "📚 Documentation:"
+echo "   docs/CONTRIBUTOR_SETUP.md   # Complete setup guide"
+echo "   docs/SERVICE_MANAGEMENT.md  # Service management"
+echo "   docs/LOCAL_CI_TESTING.md    # CI testing guide"
 echo ""
 echo "📚 Once running, visit:"
 echo "   http://localhost:3000 - Root (redirects to Swagger)"

@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # Mirror the GitHub Actions DynamoDB service
+  dynamodb-test:
+    image: amazon/dynamodb-local:latest
+    ports:
+      - '8000:8000'
+    command: ['-jar', 'DynamoDBLocal.jar', '-sharedDb', '-inMemory']
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Your application
+  aws-config-service-test:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - AWS_REGION=us-east-1
+      - DYNAMODB_ENDPOINT=http://dynamodb-test:8000
+      - PORT=3000
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+    depends_on:
+      dynamodb-test:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Test runner service
+  test-runner:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      - AWS_REGION=us-east-1
+      - DYNAMODB_ENDPOINT=http://dynamodb-test:8000
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+    depends_on:
+      dynamodb-test:
+        condition: service_healthy
+    command: >
+      sh -c "
+        apk add --no-cache curl aws-cli &&
+        yarn install --frozen-lockfile &&
+        yarn dynamodb:create-table &&
+        echo 'Tables created, waiting for app...' &&
+        sleep 30 &&
+        curl -f http://aws-config-service-test:3000/health &&
+        echo 'All tests passed!'
+      "

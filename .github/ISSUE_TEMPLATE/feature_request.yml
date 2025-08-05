@@ -1,0 +1,78 @@
+name: ✨ Feature Request
+description: Suggest an idea for this project
+title: '[FEATURE]: '
+labels: ['enhancement', 'triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! ✨
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 🤔 Problem Statement
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: 💡 Proposed Solution
+      description: Describe the solution you'd like
+      placeholder: A clear and concise description of what you want to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 🔄 Alternatives Considered
+      description: Describe alternatives you've considered
+      placeholder: A clear and concise description of any alternative solutions or features you've considered.
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 📈 Priority
+      description: What priority should this feature have?
+      options:
+        - Low (Nice to have)
+        - Medium (Would improve workflow)
+        - High (Important for productivity)
+        - Critical (Blocking current work)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: 🔧 Estimated Complexity
+      description: How complex do you think this feature would be to implement?
+      options:
+        - Low (Simple change)
+        - Medium (Moderate effort)
+        - High (Significant development)
+        - Unknown
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: 🎨 Mockups/Examples
+      description: Add any mockups, examples, or additional context about the feature here.
+      placeholder: You can drag and drop images here or provide links to examples.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: ✅ Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched for existing feature requests
+          required: true
+        - label: This feature would benefit multiple users
+          required: true
+        - label: I understand this is a request and may not be implemented immediately
+          required: true

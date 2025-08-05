@@ -1,7 +1,8 @@
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+
+import { getConfigService } from '../container/DIContainer';
 import configSchemas from '../schemas/config.json';
-import { configService } from '../services/configService';
-import { ConfigRequest, ConfigResponse } from '../types/config';
+import type { ConfigRequest, ConfigResponse } from '../types/config';
 
 interface ConfigParams {
   tenant: string;
@@ -10,14 +11,14 @@ interface ConfigParams {
   configName: string;
 }
 
-export async function configRoutes(fastify: FastifyInstance): Promise<void> {
+export function configRoutes(fastify: FastifyInstance, _options: unknown, done: () => void): void {
   // GET /config/{tenant}/cloud/{cloudRegion}/service/{service}/config/{configName}
   fastify.get<{ Params: ConfigParams }>(
     '/config/:tenant/cloud/:cloudRegion/service/:service/config/:configName',
     { schema: configSchemas.getConfigByParams },
     async (
       request: FastifyRequest<{ Params: ConfigParams }>,
-      reply: FastifyReply
+      reply: FastifyReply,
     ): Promise<ConfigResponse> => {
       const { tenant, cloudRegion, service, configName } = request.params;
 
@@ -40,7 +41,8 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
       });
 
       try {
-        const config = configService.getConfig(configRequest);
+        const configService = getConfigService();
+        const config = await configService.getConfig(configRequest);
 
         if (config) {
           const response: ConfigResponse = {
@@ -59,13 +61,13 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
               cloudRegion,
               service,
               configName,
-              hasValue: !!config,
+              hasValue: config !== null && config !== undefined,
             },
           });
 
           return response;
         } else {
-          reply.code(404);
+          void reply.code(404);
           const response: ConfigResponse = {
             tenant,
             cloudRegion,
@@ -103,10 +105,10 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
           },
         });
 
-        reply.code(500);
+        void reply.code(500);
         throw new Error('Internal server error while retrieving configuration');
       }
-    }
+    },
   );
 
   // GET /config - List all available configurations (for debugging/discovery)
@@ -119,7 +121,8 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
       });
 
       try {
-        const allConfigs = configService.getAllConfigs();
+        const configService = getConfigService();
+        const allConfigs = await configService.getAllConfigs();
 
         request.requestLogger.info('All configs retrieved successfully', {
           event: 'business.config.get_all.success',
@@ -139,9 +142,12 @@ export async function configRoutes(fastify: FastifyInstance): Promise<void> {
           },
         });
 
-        reply.code(500);
+        void reply.code(500);
         throw new Error('Internal server error while retrieving configurations');
       }
-    }
+    },
   );
+
+  // Call done to indicate plugin is ready
+  done();
 }

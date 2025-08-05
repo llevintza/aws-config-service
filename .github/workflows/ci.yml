@@ -1,0 +1,641 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['main', 'develop']
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  pull-requests: write
+  checks: write
+
+env:
+  NODE_VERSION: '22'
+  YARN_CACHE_FOLDER: ~/.yarn
+
+jobs:
+  # Job 1: Build and Test
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: ['22']
+
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build application
+        run: yarn build
+
+      - name: Verify build artifacts
+        run: |
+          test -d dist
+          test -f dist/server.js
+          echo "Build artifacts verified successfully"
+
+      - name: Setup test environment
+        run: |
+          # Install AWS CLI v2 for DynamoDB checks (or update if already installed)
+          echo "Installing/updating AWS CLI v2..."
+          sudo apt-get update && sudo apt-get install -y unzip
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install --update || sudo ./aws/install
+
+          # Wait for DynamoDB to be ready with better check
+          echo "Waiting for DynamoDB to be ready..."
+          max_attempts=60
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+            # Check if DynamoDB is responding to list tables command
+            if aws dynamodb list-tables --endpoint-url http://localhost:8000 --region us-east-1 > /dev/null 2>&1; then
+              echo "DynamoDB is ready on attempt $attempt"
+              break
+            fi
+            echo "DynamoDB not ready, attempt $attempt/$max_attempts"
+            sleep 3
+            attempt=$((attempt + 1))
+          done
+
+          if [ $attempt -gt $max_attempts ]; then
+            echo "DynamoDB failed to start after $max_attempts attempts"
+            exit 1
+          fi
+
+          # Create DynamoDB tables for testing
+          yarn dynamodb:create-table || echo "Table creation failed or already exists"
+        env:
+          AWS_REGION: us-east-1
+          DYNAMODB_ENDPOINT: http://localhost:8000
+          AWS_ACCESS_KEY_ID: dummy
+          AWS_SECRET_ACCESS_KEY: dummy
+
+      - name: Run tests
+        run: |
+          # Add test command when tests are implemented
+          echo "Tests would run here"
+          # yarn test
+        env:
+          AWS_REGION: us-east-1
+          DYNAMODB_ENDPOINT: http://localhost:8000
+
+      - name: Generate test coverage
+        run: |
+          # Add coverage command when tests are implemented
+          echo "Test coverage would be generated here"
+          # yarn test:coverage
+
+      - name: Debug secret availability
+        run: |
+          if [ -z "${{ secrets.CODE_QUALITY_REPORT_TOKEN }}" ]; then
+            echo "ERROR: Secret is NOT available"
+            exit 1
+          else
+            echo "Secret is available"
+          fi
+        env:
+          CODE_QUALITY_REPORT_TOKEN: ${{ secrets.CODE_QUALITY_REPORT_TOKEN }}
+
+      - name: Upload coverage to Codecov
+        if: matrix.node-version == '22' && hashFiles('./coverage/lcov.info') != ''
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODE_QUALITY_REPORT_TOKEN }}
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
+        continue-on-error: true
+
+  # Job 2: Docker Build and Security Scan
+  docker:
+    name: Docker Build & Security Scan
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: aws-config-service:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+          load: true
+
+      - name: Setup Node.js for table creation
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies for DynamoDB setup
+        run: yarn install --frozen-lockfile
+
+      - name: Create DynamoDB tables
+        run: |
+          # Wait for DynamoDB to be ready first
+          echo "Waiting for DynamoDB to be ready for table creation..."
+          max_attempts=30
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+            if aws dynamodb list-tables --endpoint-url http://localhost:8000 --region us-east-1 > /dev/null 2>&1; then
+              echo "DynamoDB is ready for table creation on attempt $attempt"
+              break
+            fi
+            echo "DynamoDB not ready for table creation, attempt $attempt/$max_attempts"
+            sleep 3
+            attempt=$((attempt + 1))
+          done
+
+          if [ $attempt -gt $max_attempts ]; then
+            echo "DynamoDB failed to be ready for table creation"
+            exit 1
+          fi
+
+          # Create tables
+          yarn dynamodb:create-table
+
+          # Verify tables were created
+          echo "Verifying DynamoDB tables..."
+          aws dynamodb list-tables --endpoint-url http://localhost:8000 --region us-east-1
+        env:
+          AWS_REGION: us-east-1
+          DYNAMODB_ENDPOINT: http://localhost:8000
+          AWS_ACCESS_KEY_ID: dummy
+          AWS_SECRET_ACCESS_KEY: dummy
+
+      - name: Install testing tools
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq unzip
+          echo "✅ Testing tools installed successfully"
+
+      - name: Install AWS CLI v2
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install --update || sudo ./aws/install
+          aws --version
+          echo "✅ AWS CLI v2 installed successfully"
+
+      - name: Verify DynamoDB container status
+        run: |
+          echo "=== DynamoDB Container Status ==="
+          if docker ps | grep dynamodb; then
+            echo "✅ DynamoDB container is running"
+          else
+            echo "❌ DynamoDB container not found"
+            echo "All containers:"
+            docker ps -a
+            exit 1
+          fi
+
+      - name: Check network connectivity
+        run: |
+          echo "=== Network Connectivity Test ==="
+          if netstat -tlnp | grep :8000; then
+            echo "✅ Port 8000 is listening"
+          else
+            echo "❌ Port 8000 is not listening"
+            echo "All listening ports:"
+            netstat -tlnp
+            exit 1
+          fi
+
+      - name: Wait for DynamoDB to respond
+        run: |
+          echo "Waiting for DynamoDB to respond..."
+          max_attempts=30
+          attempt=1
+
+          while [ $attempt -le $max_attempts ]; do
+            echo "Attempt $attempt/$max_attempts: Testing DynamoDB connectivity"
+            
+            # Test AWS CLI functionality directly (DynamoDB Local doesn't respond to basic HTTP requests)
+            if aws dynamodb list-tables --endpoint-url http://localhost:8000 --region us-east-1 > /dev/null 2>&1; then
+              echo "✅ DynamoDB is ready and responding to AWS CLI"
+              break
+            else
+              echo "⚠️ DynamoDB not responding to AWS CLI - attempt $attempt/$max_attempts"
+              
+              # Show more debug info every 10 attempts
+              if [ $((attempt % 10)) -eq 0 ]; then
+                echo "=== Debug Info (attempt $attempt) ==="
+                echo "DynamoDB container status:"
+                docker ps | grep dynamodb || echo "No DynamoDB container found"
+                echo "Port 8000 status:"
+                netstat -tlnp | grep :8000 || echo "Port 8000 not listening"
+                echo "Recent DynamoDB logs:"
+                docker logs --tail 5 $(docker ps -q --filter "ancestor=amazon/dynamodb-local:latest") 2>/dev/null || echo "No container logs available"
+              fi
+            fi
+            
+            sleep 3
+            attempt=$((attempt + 1))
+          done
+
+          if [ $attempt -gt $max_attempts ]; then
+            echo "❌ DynamoDB failed to respond after $max_attempts attempts"
+            echo "=== Final Debug Information ==="
+            echo "Docker containers:"
+            docker ps -a
+            echo "Network status:"
+            netstat -tlnp | grep :8000
+            echo "DynamoDB container logs:"
+            docker logs $(docker ps -q --filter "ancestor=amazon/dynamodb-local:latest") 2>/dev/null || echo "No DynamoDB container logs found"
+            echo "AWS CLI version:"
+            aws --version
+            exit 1
+          fi
+        env:
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: dummy
+          AWS_SECRET_ACCESS_KEY: dummy
+
+      - name: Verify DynamoDB tables exist
+        run: |
+          echo "=== Verifying DynamoDB tables ==="
+          tables=$(aws dynamodb list-tables --endpoint-url http://localhost:8000 --region us-east-1 --output text --query 'TableNames')
+          echo "Available tables: $tables"
+
+          if [ -z "$tables" ] || [ "$tables" = "None" ]; then
+            echo "❌ No DynamoDB tables found"
+            exit 1
+          else
+            echo "✅ DynamoDB tables are available"
+          fi
+        env:
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: dummy
+          AWS_SECRET_ACCESS_KEY: dummy
+
+      - name: Build and start application container
+        run: |
+          echo "=== Starting application container ==="
+          docker run -d \
+            --name aws-config-service-test \
+            --network host \
+            -e NODE_ENV=production \
+            -e AWS_REGION=us-east-1 \
+            -e DYNAMODB_ENDPOINT=http://localhost:8000 \
+            -e PORT=3000 \
+            -e AWS_ACCESS_KEY_ID=dummy \
+            -e AWS_SECRET_ACCESS_KEY=dummy \
+            aws-config-service:${{ github.sha }}
+
+          echo "✅ Container started with ID: $(docker ps -q --filter name=aws-config-service-test)"
+
+      - name: Wait for container to be ready
+        run: |
+          echo "Waiting for container to start..."
+          sleep 20
+
+          # Check if container is still running
+          if ! docker ps | grep aws-config-service-test; then
+            echo "❌ Container is not running"
+            echo "Container logs:"
+            docker logs aws-config-service-test
+            exit 1
+          fi
+
+          echo "✅ Container is running"
+          echo "=== Container Status ==="
+          docker ps | grep aws-config-service-test
+
+      - name: Test application health endpoint
+        run: |
+          echo "=== Testing application health ==="
+          max_attempts=60
+          attempt=1
+
+          while [ $attempt -le $max_attempts ]; do
+            if curl -f http://localhost:3000/health > /dev/null 2>&1; then
+              echo "✅ Health check passed on attempt $attempt"
+              break
+            fi
+            
+            echo "⚠️ Health check failed, attempt $attempt/$max_attempts"
+            
+            # Show logs every 10 attempts
+            if [ $((attempt % 10)) -eq 0 ]; then
+              echo "Recent container logs:"
+              docker logs --tail 10 aws-config-service-test
+            fi
+            
+            sleep 2
+            attempt=$((attempt + 1))
+          done
+
+          if [ $attempt -gt $max_attempts ]; then
+            echo "❌ Health check failed after $max_attempts attempts"
+            echo "=== Final Container Logs ==="
+            docker logs aws-config-service-test
+            exit 1
+          fi
+
+      - name: Test API functionality
+        run: |
+          echo "=== Testing API endpoints ==="
+          health_response=$(curl -s http://localhost:3000/health)
+          echo "Health response: $health_response"
+
+          if echo "$health_response" | jq . > /dev/null 2>&1; then
+            echo "✅ API returned valid JSON"
+          else
+            echo "⚠️ API response is not valid JSON"
+          fi
+
+      - name: Test container DynamoDB connectivity
+        run: |
+          echo "=== Testing DynamoDB connectivity from container ==="
+          if docker exec aws-config-service-test sh -c "curl -f http://localhost:8000/ > /dev/null 2>&1"; then
+            echo "✅ DynamoDB accessible from container"
+          else
+            echo "⚠️ DynamoDB not accessible from container (this may be expected)"
+          fi
+
+      - name: Cleanup test container
+        if: always()
+        run: |
+          echo "=== Cleaning up test container ==="
+          docker stop aws-config-service-test || true
+          docker rm aws-config-service-test || true
+          echo "✅ Cleanup completed"
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: aws-config-service:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Job 3: Performance and Load Testing
+  performance:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'performance-test')
+
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build application
+        run: yarn build
+
+      - name: Setup test environment
+        run: |
+          # Install AWS CLI v2 for DynamoDB checks
+          sudo apt-get update && sudo apt-get install -y unzip
+
+          # Install AWS CLI v2 (or update if already installed)
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install --update || sudo ./aws/install
+
+          # Wait for DynamoDB to be ready with better check
+          echo "Waiting for DynamoDB to be ready..."
+          max_attempts=60
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+            # Check if DynamoDB is responding to list tables command
+            if aws dynamodb list-tables --endpoint-url http://localhost:8000 --region us-east-1 > /dev/null 2>&1; then
+              echo "DynamoDB is ready on attempt $attempt"
+              break
+            fi
+            echo "DynamoDB not ready, attempt $attempt/$max_attempts"
+            sleep 3
+            attempt=$((attempt + 1))
+          done
+
+          # Create DynamoDB tables
+          yarn dynamodb:create-table
+        env:
+          AWS_REGION: us-east-1
+          DYNAMODB_ENDPOINT: http://localhost:8000
+          AWS_ACCESS_KEY_ID: dummy
+          AWS_SECRET_ACCESS_KEY: dummy
+
+      - name: Start application
+        run: |
+          yarn start &
+          APP_PID=$!
+          echo "Application PID: $APP_PID"
+          echo "APP_PID=$APP_PID" >> $GITHUB_ENV
+          sleep 15
+
+          # Verify application is running
+          if ! curl -f http://localhost:3000/health > /dev/null 2>&1; then
+            echo "Application failed to start"
+            ps aux | grep node
+            exit 1
+          fi
+          echo "Application started successfully"
+        env:
+          AWS_REGION: us-east-1
+          DYNAMODB_ENDPOINT: http://localhost:8000
+
+      - name: Run performance tests
+        run: |
+          # Install artillery for load testing
+          npm install -g artillery
+          # Create a basic load test config
+          cat > artillery-test.yml << EOF
+          config:
+            target: 'http://localhost:3000'
+            phases:
+              - duration: 60
+                arrivalRate: 10
+          scenarios:
+            - name: "Health check"
+              requests:
+                - get:
+                    url: "/health"
+          EOF
+          artillery run artillery-test.yml
+
+  # Job 6: Integration Tests
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build application
+        run: yarn build
+
+      - name: Setup test environment
+        run: |
+          # Install AWS CLI v2 for DynamoDB checks
+          sudo apt-get update && sudo apt-get install -y unzip
+
+          # Install AWS CLI v2 (or update if already installed)
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install --update || sudo ./aws/install
+
+          # Wait for DynamoDB to be ready with better check
+          echo "Waiting for DynamoDB to be ready..."
+          max_attempts=60
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+            # Check if DynamoDB is responding to list tables command
+            if aws dynamodb list-tables --endpoint-url http://localhost:8000 --region us-east-1 > /dev/null 2>&1; then
+              echo "DynamoDB is ready on attempt $attempt"
+              break
+            fi
+            echo "DynamoDB not ready, attempt $attempt/$max_attempts"
+            sleep 3
+            attempt=$((attempt + 1))
+          done
+
+          # Create DynamoDB tables
+          yarn dynamodb:create-table
+        env:
+          AWS_REGION: us-east-1
+          DYNAMODB_ENDPOINT: http://localhost:8000
+          AWS_ACCESS_KEY_ID: dummy
+          AWS_SECRET_ACCESS_KEY: dummy
+
+      - name: Run integration tests
+        run: |
+          # Integration tests would be implemented here
+          echo "Integration tests would run here"
+          # yarn test:integration
+        env:
+          AWS_REGION: us-east-1
+          DYNAMODB_ENDPOINT: http://localhost:8000
+
+  # Job 5: Generate and Upload Artifacts
+  artifacts:
+    name: Generate Artifacts
+    runs-on: ubuntu-latest
+    needs: [build-and-test, docker]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build application
+        run: yarn build
+
+      - name: Create deployment package
+        run: |
+          tar -czf aws-config-service-${{ github.sha }}.tar.gz \
+            dist/ \
+            package.json \
+            yarn.lock \
+            healthcheck.js \
+            Dockerfile \
+            docker-compose.yml
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: aws-config-service-${{ github.sha }}
+          path: aws-config-service-${{ github.sha }}.tar.gz
+          retention-days: 30
+
+  # Job 6: Notification
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [build-and-test, docker]
+    if: always()
+
+    steps:
+      - name: Notify on success
+        if: needs.build-and-test.result == 'success' && needs.docker.result == 'success'
+        run: |
+          echo "✅ All CI checks passed successfully!"
+
+      - name: Notify on failure
+        if: needs.build-and-test.result == 'failure' || needs.docker.result == 'failure'
+        run: |
+          echo "❌ CI checks failed. Please review the failed jobs."
+          exit 1

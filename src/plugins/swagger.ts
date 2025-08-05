@@ -1,5 +1,5 @@
 import swagger from '@fastify/swagger';
-import { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 
 export async function registerSwagger(fastify: FastifyInstance): Promise<void> {
   await fastify.register(swagger, {

@@ -1,5 +1,5 @@
 import swaggerUi from '@fastify/swagger-ui';
-import { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 
 export async function registerSwaggerUI(fastify: FastifyInstance): Promise<void> {
   await fastify.register(swaggerUi, {
@@ -16,7 +16,7 @@ export async function registerSwaggerUI(fastify: FastifyInstance): Promise<void>
       showCommonExtensions: true,
     },
     uiHooks: {
-      onRequest: function (request, reply, next) {
+      onRequest(request, reply, next) {
         // Add any custom logic before serving Swagger UI
         next();
       },

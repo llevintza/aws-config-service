@@ -4,17 +4,58 @@ services:
   aws-config-service:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=production
       - PORT=3000
       - HOST=0.0.0.0
+      - USE_DYNAMODB=true
+      - AWS_REGION=us-east-1
+      - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
+      - DYNAMODB_TABLE_NAME=ConfigurationsTable
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
     volumes:
       - ./data:/app/data:ro
+    depends_on:
+      - dynamodb-local
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "node", "healthcheck.js"]
+      test: ['CMD', 'node', 'healthcheck.js']
       interval: 30s
       timeout: 3s
       retries: 3
       start_period: 5s
+    networks:
+      - config-network
+
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: dynamodb-local
+    ports:
+      - '8000:8000'
+    command: ['-jar', 'DynamoDBLocal.jar', '-sharedDb', '-inMemory']
+    working_dir: /home/dynamodblocal
+    volumes:
+      - ./dynamodb-data:/home/dynamodblocal/data
+    networks:
+      - config-network
+
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin:latest
+    container_name: dynamodb-admin
+    ports:
+      - '8001:8001'
+    environment:
+      - DYNAMO_ENDPOINT=http://dynamodb-local:8000
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+    depends_on:
+      - dynamodb-local
+    networks:
+      - config-network
+
+networks:
+  config-network:
+    driver: bridge

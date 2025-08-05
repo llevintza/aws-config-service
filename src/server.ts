@@ -2,10 +2,47 @@ import cors from '@fastify/cors';
 import Fastify from 'fastify';
 import logger from './config/logger';
 import { requestLoggingPlugin } from './plugins/request-logging';
-import { registerSwagger } from './plugins/swagger';
-import { registerSwaggerUI } from './plugins/swagger-ui';
+import { registerSwaggerCombined } from './plugins/swagger-combined';
 import { configRoutes } from './routes/config';
 import { healthRoutes } from './routes/health';
+
+// Export build function for testing
+export function build() {
+  const server = Fastify({
+    logger: {
+      level: process.env.LOG_LEVEL || 'info',
+      transport:
+        process.env.NODE_ENV !== 'test' && process.env.NODE_ENV !== 'production'
+          ? {
+              target: 'pino-pretty',
+              options: {
+                colorize: true,
+                translateTime: 'HH:MM:ss Z',
+                ignore: 'pid,hostname',
+              },
+            }
+          : undefined,
+    },
+  });
+
+  // Register plugins and routes
+  // Register CORS
+  server.register(cors, {
+    origin: true,
+  });
+
+  // Register logging
+  server.register(requestLoggingPlugin);
+
+  // Register swagger and swagger-ui together
+  server.register(registerSwaggerCombined);
+
+  // Register routes
+  server.register(healthRoutes);
+  server.register(configRoutes);
+
+  return server;
+}
 
 // Log application startup with semantic structure
 logger.info('🚀 Starting AWS Config Service...', {
@@ -20,43 +57,13 @@ logger.info('🚀 Starting AWS Config Service...', {
   timestamp: new Date().toISOString(),
 });
 
-const server = Fastify({
-  logger: {
-    level: process.env.LOG_LEVEL || 'info',
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'HH:MM:ss Z',
-        ignore: 'pid,hostname',
-      },
-    },
-  },
-});
+const server = build();
 
 // Add Winston logger to server context
 server.decorate('winstonLogger', logger);
 
 const start = async (): Promise<void> => {
   try {
-    // Register request logging plugin first
-    await server.register(requestLoggingPlugin);
-
-    // Register CORS
-    await server.register(cors, {
-      origin: true,
-    });
-
-    // Register Swagger documentation
-    await registerSwagger(server);
-
-    // Register Swagger UI
-    await registerSwaggerUI(server);
-
-    // Register all route modules individually
-    await server.register(healthRoutes);
-    await server.register(configRoutes);
-
     const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
     const host = process.env.HOST || '0.0.0.0';
 
@@ -130,6 +137,7 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
-// Start the server
-start();
-start();
+// Start the server only if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  start();
+}
