@@ -84,7 +84,7 @@ yarn dynamodb:create-table
 #### Using the Bash Script
 
 ```bash
-./scripts/create-dynamodb-table.sh
+./scripts/dynamodb/create-dynamodb-table.sh
 ```
 
 #### Manual Creation with AWS CLI

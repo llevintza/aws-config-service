@@ -213,7 +213,7 @@ cd aws-config-service
 
 ```bash
 # Run the setup script (this installs dependencies and sets up git hooks)
-./setup.sh
+./scripts/setup/setup.sh
 ```
 
 Alternatively, if you prefer manual setup:
@@ -403,7 +403,7 @@ sudo lsof -ti:3000 | xargs sudo kill -9
 yarn husky install
 
 # Make sure the setup script was run
-./setup.sh
+./scripts/setup/setup.sh
 ```
 
 ### Getting Help

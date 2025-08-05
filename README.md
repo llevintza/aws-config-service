@@ -50,10 +50,10 @@ GET /config/tenant1/cloud/us-east-1/service/api-gateway/config/rate-limit
 
 **📋 For detailed service management instructions, see [SERVICE_MANAGEMENT.md](./docs/SERVICE_MANAGEMENT.md)**
 
-1. **Setup the project:**
+1. **Run the setup script** (recommended):
 
    ```bash
-   ./setup.sh
+   ./scripts/setup/setup.sh
    ```
 
 2. **Run in development mode (with hot reload):**
@@ -113,6 +113,42 @@ The project is fully configured for debugging with VS Code. You have several deb
 - Use `debugger;` statement in your code for programmatic breakpoints
 - The debugger will automatically restart when files change (with hot reload configs)
 - Check the Debug Console for output and use it to evaluate expressions
+
+### 🧪 Testing & CI
+
+**📋 For complete testing setup, see [scripts/README.md](./scripts/README.md)**
+
+The project includes organized scripts for various testing scenarios:
+
+#### Testing DynamoDB Connectivity:
+
+```bash
+# Test DynamoDB Local setup
+./scripts/dynamodb/test-dynamodb.sh
+
+# Use Docker Compose for full environment testing
+docker-compose -f docker-compose.dynamodb-test.yml up
+```
+
+#### Testing CI Jobs Locally:
+
+```bash
+# Test the complete Docker CI job locally
+./scripts/ci/test-docker-locally.sh
+
+# Test using GitHub Actions local runner
+./scripts/ci/test-with-act.sh
+```
+
+#### General Application Testing:
+
+```bash
+# Test application health endpoints
+./scripts/testing/test-health.sh
+
+# Run minimal functionality tests
+./scripts/testing/test-minimal.sh
+```
 
 **Stopping the service:**
 
@@ -182,32 +218,100 @@ Example response:
 ## Project Structure
 
 ```
-├── src/
-│   ├── server.ts              # Main server file
-│   ├── plugins/
-│   │   ├── swagger.ts         # Swagger documentation configuration
-│   │   └── swagger-ui.ts      # Swagger UI configuration
-│   ├── routes/
-│   │   ├── index.ts           # Route registration helper
-│   │   ├── config.ts          # Configuration routes
-│   │   └── health.ts          # Health and system routes
-│   ├── services/
-│   │   └── configService.ts   # Configuration business logic
-│   └── types/
-│       └── config.ts          # TypeScript interfaces
-├── data/
-│   └── configurations.json    # Configuration data
-├── docs/
-│   ├── CONTRIBUTOR_SETUP.md   # Complete contributor setup guide
-│   ├── DEBUGGING.md           # Debugging guide
-│   ├── LOCAL_CI_TESTING.md    # Local CI testing guide
-│   └── SERVICE_MANAGEMENT.md  # Detailed service management guide
-├── package.json
-├── tsconfig.json
-├── nodemon.json               # Nodemon configuration for hot reload
-├── Dockerfile
-├── docker-compose.yml
-└── setup.sh                   # Setup script
+aws-config-service/
+├── .github/                   # GitHub workflows and templates
+│   ├── workflows/
+│   │   ├── ci.yml            # Main CI pipeline
+│   │   └── pr-checks.yml     # Pull request validation
+│   └── pull_request_template/
+├── .vscode/                   # VS Code configuration
+│   ├── launch.json           # Debug configurations
+│   ├── settings.json         # Workspace settings
+│   └── tasks.json            # Build and run tasks
+├── src/                       # Source code
+│   ├── server.ts             # Main server entry point
+│   ├── __tests__/            # Test files
+│   │   ├── configService.test.ts
+│   │   └── integration/
+│   ├── config/               # Configuration modules
+│   │   ├── dynamodb.ts       # DynamoDB configuration
+│   │   ├── logger.ts         # Logging configuration
+│   │   └── pino-winston-bridge.ts
+│   ├── container/            # Dependency injection
+│   │   └── DIContainer.ts    # IoC container setup
+│   ├── factories/            # Service factories
+│   │   └── ConfigServiceFactory.ts
+│   ├── interfaces/           # TypeScript interfaces
+│   │   └── IConfigService.ts
+│   ├── plugins/              # Fastify plugins
+│   │   ├── request-logging.ts
+│   │   ├── swagger.ts        # API documentation
+│   │   ├── swagger-ui.ts     # Swagger UI setup
+│   │   └── swagger-combined.ts
+│   ├── routes/               # API route handlers
+│   │   ├── index.ts          # Route registration
+│   │   ├── config.ts         # Configuration endpoints
+│   │   └── health.ts         # Health check endpoints
+│   ├── schemas/              # JSON schemas
+│   │   ├── config.json       # Configuration schema
+│   │   └── health.json       # Health check schema
+│   ├── services/             # Business logic services
+│   │   ├── configService.ts  # Abstract base service
+│   │   ├── fileConfigService.ts    # File-based implementation
+│   │   ├── dynamoConfigService.ts  # DynamoDB implementation
+│   │   └── hybridConfigService.ts  # Hybrid implementation
+│   ├── testing/              # Testing utilities
+│   │   ├── jest.setup.ts     # Jest configuration
+│   │   └── MockConfigService.ts    # Mock implementations
+│   └── types/                # TypeScript type definitions
+│       └── config.ts         # Configuration types
+├── data/                     # Static data files
+│   └── configurations.json  # Default configuration data
+├── docs/                     # Documentation
+│   ├── CONTRIBUTOR_SETUP.md  # Development setup guide
+│   ├── DEBUGGING.md          # Debugging instructions
+│   ├── DESIGN_PATTERNS.md    # Architecture documentation
+│   ├── DYNAMODB_SETUP.md     # DynamoDB configuration guide
+│   ├── ESLINT_FIX_SUMMARY.md # Code quality documentation
+│   └── SERVICE_MANAGEMENT.md # Operations guide
+├── logs/                     # Application logs (gitignored)
+├── scripts/                  # Development and deployment scripts
+│   ├── ci/                   # CI/CD testing scripts
+│   │   ├── test-docker-locally.sh   # Local Docker CI testing
+│   │   ├── test-with-act.sh         # GitHub Actions local testing
+│   │   ├── test-ci-locally.sh       # General CI testing
+│   │   └── test-docker-build.sh     # Docker build testing
+│   ├── dynamodb/             # DynamoDB management
+│   │   ├── create-dynamodb-table.sh # Table creation script
+│   │   └── test-dynamodb.sh         # DynamoDB connectivity test
+│   ├── setup/                # Environment setup
+│   │   ├── setup.sh          # Main setup script
+│   │   ├── install-prerequisites.sh # Dependencies installation
+│   │   └── check-prerequisites.sh   # Prerequisites validation
+│   ├── testing/              # General testing scripts
+│   │   ├── test-health.sh    # Health endpoint testing
+│   │   ├── test-minimal.sh   # Minimal functionality tests
+│   │   └── test-simple.sh    # Simple application tests
+│   ├── create-table.ts       # TypeScript table creation
+│   ├── migrate-to-dynamodb.ts # Data migration script
+│   └── README.md             # Scripts documentation
+├── package.json              # Dependencies and scripts
+├── tsconfig.json            # TypeScript configuration
+├── tsconfig.dev.json        # Development TypeScript config
+├── jest.config.js           # Jest testing configuration
+├── jest.integration.config.js # Integration test configuration
+├── jest.setup.ts            # Jest setup file
+├── eslint.config.js         # ESLint configuration
+├── commitlint.config.js     # Commit message linting
+├── nodemon.json             # Development auto-reload config
+├── healthcheck.js           # Docker health check script
+├── Dockerfile               # Container image definition
+├── docker-compose.yml       # Development environment
+├── docker-compose.dynamodb.yml     # DynamoDB standalone setup
+├── docker-compose.dynamodb-test.yml # DynamoDB testing environment
+├── docker-compose.ci-test.yml      # CI testing environment
+├── CI_CD_SETUP.md          # CI/CD documentation
+└── MIGRATION_SUMMARY.md    # Migration documentation
 ```
 
 ## Available Scripts

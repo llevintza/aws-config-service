@@ -23,7 +23,7 @@
    - Updated main `docker-compose.yml` to include DynamoDB and proper environment variables
 
 8. **Migration Tools**:
-   - Created shell script `scripts/create-dynamodb-table.sh`
+   - Created shell script `scripts/dynamodb/create-dynamodb-table.sh`
    - Created TypeScript version `scripts/create-table.ts`
    - Implemented data migration script `scripts/migrate-to-dynamodb.ts`
 
