@@ -1,8 +1,11 @@
 # Multi-stage build for better optimization
-FROM node:18-alpine AS builder
+FROM node:22-alpine AS builder
 
-# Install Yarn
-RUN corepack enable && corepack prepare yarn@stable --activate
+# Install dependencies needed for native modules
+RUN apk add --no-cache python3 make g++
+
+# Install Yarn with specific version
+RUN corepack enable && corepack prepare yarn@1.22.19 --activate
 
 WORKDIR /app
 
@@ -17,10 +20,13 @@ COPY . .
 RUN yarn build
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:22-alpine AS production
 
-# Install Yarn
-RUN corepack enable && corepack prepare yarn@stable --activate
+# Install runtime dependencies that might be needed
+RUN apk add --no-cache dumb-init
+
+# Install Yarn with specific version
+RUN corepack enable && corepack prepare yarn@1.22.19 --activate
 
 WORKDIR /app
 
@@ -51,6 +57,9 @@ EXPOSE 3000
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node healthcheck.js
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
 
 # Start the application
 CMD ["yarn", "start"]
