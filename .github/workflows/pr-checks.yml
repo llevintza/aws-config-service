@@ -97,7 +97,44 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: |
+          echo "Installing dependencies with retry logic..."
+          max_attempts=3
+          attempt=1
+
+          while [ $attempt -le $max_attempts ]; do
+            echo "Attempt $attempt/$max_attempts: Installing dependencies"
+            
+            if yarn install --frozen-lockfile --network-timeout 100000; then
+              echo "✅ Dependencies installed successfully on attempt $attempt"
+              break
+            else
+              echo "⚠️ Attempt $attempt failed"
+              
+              if [ $attempt -eq $max_attempts ]; then
+                echo "❌ All attempts failed. Trying alternative approaches..."
+                
+                # Clear yarn cache and try again
+                echo "Clearing yarn cache..."
+                yarn cache clean
+                
+                # Try with different registry
+                echo "Trying with different registry settings..."
+                yarn install --frozen-lockfile --network-timeout 100000 --registry https://registry.npmjs.org/ || {
+                  echo "❌ Final attempt failed"
+                  exit 1
+                }
+                
+                echo "✅ Dependencies installed with alternative approach"
+                break
+              fi
+              
+              echo "Waiting 10 seconds before retry..."
+              sleep 10
+            fi
+            
+            attempt=$((attempt + 1))
+          done
 
       - name: Run TypeScript compiler
         run: yarn type-check
@@ -151,7 +188,21 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: |
+          # Robust yarn install with retry logic for security-compliance job
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt: Installing dependencies"
+            if yarn install --frozen-lockfile --network-timeout 100000; then
+              echo "✅ Dependencies installed successfully"
+              break
+            elif [ $attempt -eq 3 ]; then
+              echo "Final attempt: trying with npm registry fallback"
+              yarn install --frozen-lockfile --network-timeout 100000 --registry https://registry.npmjs.org/
+            else
+              echo "Retrying in 10 seconds..."
+              sleep 10
+            fi
+          done
 
       - name: Security audit
         run: |
@@ -210,7 +261,21 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: |
+          # Robust yarn install with retry logic for build-test-validation job
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt: Installing dependencies"
+            if yarn install --frozen-lockfile --network-timeout 100000; then
+              echo "✅ Dependencies installed successfully"
+              break
+            elif [ $attempt -eq 3 ]; then
+              echo "Final attempt: trying with npm registry fallback"
+              yarn install --frozen-lockfile --network-timeout 100000 --registry https://registry.npmjs.org/
+            else
+              echo "Retrying in 10 seconds..."
+              sleep 10
+            fi
+          done
 
       - name: Build application
         run: |
@@ -267,7 +332,21 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: |
+          # Robust yarn install with retry logic for documentation job
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt: Installing dependencies"
+            if yarn install --frozen-lockfile --network-timeout 100000; then
+              echo "✅ Dependencies installed successfully"
+              break
+            elif [ $attempt -eq 3 ]; then
+              echo "Final attempt: trying with npm registry fallback"
+              yarn install --frozen-lockfile --network-timeout 100000 --registry https://registry.npmjs.org/
+            else
+              echo "Retrying in 10 seconds..."
+              sleep 10
+            fi
+          done
 
       - name: Build application
         run: yarn build
@@ -329,7 +408,21 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: |
+          # Robust yarn install with retry logic for performance-impact job
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt: Installing dependencies"
+            if yarn install --frozen-lockfile --network-timeout 100000; then
+              echo "✅ Dependencies installed successfully"
+              break
+            elif [ $attempt -eq 3 ]; then
+              echo "Final attempt: trying with npm registry fallback"
+              yarn install --frozen-lockfile --network-timeout 100000 --registry https://registry.npmjs.org/
+            else
+              echo "Retrying in 10 seconds..."
+              sleep 10
+            fi
+          done
 
       - name: Build and start application
         run: |
