@@ -360,9 +360,23 @@ aws-config-service/
 
 ### CI Testing (requires prerequisites)
 
+#### 🎯 Recommended Testing Commands
+
+- `yarn test:comprehensive-ci` - **Complete validation of all GitHub Actions fixes**
+- `yarn test:security-scan` - Test Trivy vulnerability scanning
+- `yarn test:dynamodb-connectivity` - Test DynamoDB connectivity fix
+- `yarn verify:github-actions-fix` - Verify specific GitHub Actions fixes
+
+#### 🔧 Legacy/Individual Testing
+
 - `yarn ci:test-local` - Run complete CI pipeline simulation
 - `yarn ci:test-docker` - Test Docker builds only
 - `yarn ci:test-dynamodb` - Test DynamoDB Local only
 - `yarn ci:test-compose` - Test Docker Compose setup
 - `yarn ci:quality-check` - Run code quality checks only
-- 📋 **For CI testing setup, see [LOCAL_CI_TESTING.md](./docs/LOCAL_CI_TESTING.md)**
+
+#### 📋 Documentation
+
+- **For all testing commands**: [TESTING_COMMANDS.md](./docs/TESTING_COMMANDS.md)
+- **GitHub Actions fixes**: [SECURITY_SCANNING_FIX.md](./docs/SECURITY_SCANNING_FIX.md)
+- **CI testing setup**: [LOCAL_CI_TESTING.md](./docs/LOCAL_CI_TESTING.md)
