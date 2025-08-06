@@ -12,6 +12,7 @@ yarn test:comprehensive-ci
 yarn test:dynamodb-connectivity     # Test DynamoDB connectivity fix
 yarn test:security-scan            # Test Trivy security scanning
 yarn verify:github-actions-fix     # Verify specific GitHub Actions fix
+yarn test:yarn-retry               # Test yarn install retry logic
 
 # 🐳 Full workflow simulation tests
 yarn ci:test-docker                # Test complete Docker job workflow
@@ -68,6 +69,14 @@ Before pushing any changes to GitHub:
 ✅ SARIF output generation  
 ✅ JSON format validation  
 ✅ Security findings reporting
+
+### `test:yarn-retry`
+
+✅ Yarn install retry logic testing  
+✅ Network timeout simulation  
+✅ Registry fallback validation  
+✅ Dependency installation verification  
+✅ Build functionality after install
 
 ### `test:dynamodb-connectivity`
 

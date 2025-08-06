@@ -7,7 +7,11 @@ A simple but optimized REST API service that loads configurations for tenant, en
 - 🚀 **Fastify** - High-performance web framework
 - 📝 **TypeScript** - Type-safe development
 - 🐳 **Docker** - Containerized deployment
-- 📚 **Swagger** - API documentation and testing
+- 📚 **Swagger** - API#### 📋 Documentation
+- **For all testing commands**: [TESTING_COMMANDS.md](./docs/TESTING_COMMANDS.md)
+- **GitHub Actions fixes**: [SECURITY_SCANNING_FIX.md](./docs/SECURITY_SCANNING_FIX.md)
+- **Yarn install network errors**: [YARN_INSTALL_FIX.md](./docs/YARN_INSTALL_FIX.md)
+- **CI testing setup**: [LOCAL_CI_TESTING.md](./docs/LOCAL_CI_TESTING.md)cumentation and testing
 - 🔄 **Hot Reload** - Development mode with automatic restarts
 - ⚡ **Yarn** - Fast and reliable package management
 - 🎯 **Husky** - Git hooks for code quality
@@ -365,6 +369,7 @@ aws-config-service/
 - `yarn test:comprehensive-ci` - **Complete validation of all GitHub Actions fixes**
 - `yarn test:security-scan` - Test Trivy vulnerability scanning
 - `yarn test:dynamodb-connectivity` - Test DynamoDB connectivity fix
+- `yarn test:yarn-retry` - Test yarn install retry logic for network errors
 - `yarn verify:github-actions-fix` - Verify specific GitHub Actions fixes
 
 #### 🔧 Legacy/Individual Testing

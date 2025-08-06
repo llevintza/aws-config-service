@@ -53,6 +53,7 @@
     "verify:github-actions-fix": "./scripts/testing/verify-github-actions-fix.sh",
     "test:security-scan": "./scripts/testing/test-trivy-security-scan.sh",
     "test:comprehensive-ci": "./scripts/testing/test-comprehensive-ci-fixes.sh",
+    "test:yarn-retry": "./scripts/testing/test-yarn-install-retry.sh",
     "ci:test-docker-build": "./scripts/ci/test-docker-build.sh",
     "ci:test-compose": "docker-compose -f docker-compose.ci-test.yml up --build --abort-on-container-exit",
     "ci:quality-check": "yarn type-check && yarn lint:check && yarn format:check"
@@ -87,7 +88,7 @@
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
-    "concurrently": "^8.2.2",
+    "concurrently": "^9.2.0",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "4.4.4",
