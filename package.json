@@ -68,6 +68,10 @@
   ],
   "author": "",
   "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0",
+    "yarn": ">=1.22.19"
+  },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.862.0",
     "@aws-sdk/lib-dynamodb": "^3.862.0",
