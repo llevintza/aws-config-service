@@ -16,3 +16,7 @@ Thumbs.db
 .cache/
 .tmp/
 temp/
+
+# Configuration files that should maintain their specific formatting
+.commitlintrc.json
+.releaserc.json

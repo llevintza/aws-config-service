@@ -1,5 +1,8 @@
 {
   "src/**/*.{ts,tsx}": ["prettier --write", "eslint --fix --max-warnings 0"],
   "*.{js,mjs,cjs}": ["prettier --write", "eslint --fix --max-warnings 0"],
-  "*.{json,md,yml,yaml}": ["prettier --write"]
+  "*.{md,yml,yaml}": ["prettier --write"],
+  "package.json": ["prettier --write"],
+  "tsconfig*.json": ["prettier --write"],
+  "jest*.json": ["prettier --write"]
 }
