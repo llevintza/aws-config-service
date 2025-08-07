@@ -44,7 +44,6 @@
     "docker:dynamodb:down": "docker-compose -f docker-compose.dynamodb.yml down",
     "dynamodb:create-table": "ts-node scripts/create-table.ts",
     "dynamodb:migrate": "ts-node scripts/migrate-to-dynamodb.ts",
-    "prepare": "husky install",
     "check-prerequisites": "./scripts/setup/check-prerequisites.sh",
     "ci:test-local": "./scripts/ci/test-ci-locally.sh",
     "ci:test-dynamodb": "./scripts/dynamodb/test-dynamodb.sh",
