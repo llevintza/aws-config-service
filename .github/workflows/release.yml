@@ -1,4 +1,4 @@
-name: Release Pipeline
+name: Release
 
 on:
   push:
@@ -52,11 +52,11 @@ jobs:
       - name: Run semantic-release
         id: semantic
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SEMVER_RELEASE_TOKEN }}
         run: |
           if [ "${{ github.event.inputs.release_type }}" = "auto" ] || [ "${{ github.event_name }}" = "push" ]; then
             echo "Running automatic semantic release..."
-            npx semantic-release
+            yarn run release
           else
             echo "Running manual release with type: ${{ github.event.inputs.release_type }}"
             # For manual releases, we'll use the old method
@@ -147,7 +147,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
       - name: Extract metadata
         id: meta
@@ -288,7 +288,7 @@ jobs:
           draft: false
           prerelease: ${{ contains(needs.semantic-release.outputs.new_version, '-') }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
   # Job 8: Notify Teams
   notify:
