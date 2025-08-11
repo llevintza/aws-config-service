@@ -52,7 +52,7 @@ jobs:
       - name: Run semantic-release
         id: semantic
         env:
-          GITHUB_TOKEN: ${{ secrets.SEMVER_RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ github.event.inputs.release_type }}" = "auto" ] || [ "${{ github.event_name }}" = "push" ]; then
             echo "Running automatic semantic release..."
