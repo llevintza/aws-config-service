@@ -1,23 +1,25 @@
 version: 2
 updates:
-  - package-ecosystem: 'npm'
-    directory: '/'
+  - package-ecosystem: "npm"
+    directory: "/"
     schedule:
-      interval: 'weekly'
-      day: 'monday'
-      time: '09:00'
-      timezone: 'UTC'
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
     labels:
-      - 'dependencies'
-      - 'dependabot'
+      - "dependencies"
+      - "dependabot"
     reviewers:
-      - 'llevintza'
-    open-pull-requests-limit: 5
+      - "llevintza"
+    assignees:
+      - "llevintza"
+    open-pull-requests-limit: 20
     commit-message:
-      prefix: 'deps:'
-      include: 'scope'
+      prefix: "deps: "
+      include: "scope"
     groups:
       minor-and-patch:
         update-types:
-          - 'minor'
-          - 'patch'
+          - "minor"
+          - "patch"
