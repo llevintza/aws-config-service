@@ -13,7 +13,12 @@
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
-    "@semantic-release/changelog",
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
+      }
+    ],
     [
       "@semantic-release/npm",
       {
@@ -23,11 +28,25 @@
     [
       "@semantic-release/git",
       {
-        "assets": ["package.json", "yarn.lock", "CHANGELOG.md"],
+        "assets": [
+          "package.json",
+          "yarn.lock",
+          "CHANGELOG.md"
+        ],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ],
-    "@semantic-release/github"
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          "CHANGELOG.md"
+        ],
+        "successComment": false,
+        "failComment": false,
+        "releasedLabels": false
+      }
+    ]
   ],
   "preset": "angular",
   "releaseRules": [
@@ -81,6 +100,9 @@
     }
   ],
   "parserOpts": {
-    "noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
+    "noteKeywords": [
+      "BREAKING CHANGE",
+      "BREAKING CHANGES"
+    ]
   }
 }
