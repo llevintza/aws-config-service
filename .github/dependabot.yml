@@ -6,7 +6,7 @@ updates:
     schedule:
       interval: "cron"
       cronjob: "0 9 * * 1,3" # Monday and Wednesday at 09:00 UTC
-      timezone: "Etc/UTC"
+      timezone: "UTC"
     labels:
       - "dependencies"
       - "dependabot"
@@ -146,8 +146,8 @@ updates:
     directory: "/"
     schedule:
       interval: "cron"
-      cronjob: "0 9 * * 1" # Monday at 09:00 UTC
-      timezone: "Etc/UTC"
+      cronjob: "0 9 * * 1,3" # Monday and Wednesday at 09:00 UTC
+      timezone: "UTC"
     labels:
       - "dependencies"
       - "dependabot"
@@ -201,8 +201,8 @@ updates:
     directory: "/"
     schedule:
       interval: "cron"
-      cronjob: "0 9 * * 3" # Wednesday at 09:00 UTC
-      timezone: "Etc/UTC"
+      cronjob: "0 9 * * 1,3" # Monday and Wednesday at 09:00 UTC
+      timezone: "UTC"
     labels:
       - "dependencies"
       - "dependabot"
