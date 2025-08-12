@@ -120,7 +120,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: matrix.node-version == '22' && hashFiles('./coverage/lcov.info') != ''
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODE_QUALITY_REPORT_TOKEN }}
           file: ./coverage/lcov.info
