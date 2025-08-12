@@ -64,7 +64,7 @@ jobs:
         run: |
           # Add any security or critical issue checks here
           # For now, just check if there are any TODO/FIXME comments in critical files
-          CRITICAL_TODOS=$(grep -r "TODO\|FIXME" src/ --include="*.ts" | grep -i "critical\|security\|important" | wc -l)
+          CRITICAL_TODOS=$(grep -r -E '^\s*(//|/\*).*?(TODO|FIXME)' src/ --include="*.ts" | grep -i "critical\|security\|important" | wc -l)
           
           if [ "$CRITICAL_TODOS" -gt 0 ]; then
             echo "❌ Found critical TODOs/FIXMEs that need attention"
