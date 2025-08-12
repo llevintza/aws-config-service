@@ -48,6 +48,7 @@ jobs:
             ci
             chore
             revert
+            deps
 
       - name: Check PR size
         run: |
