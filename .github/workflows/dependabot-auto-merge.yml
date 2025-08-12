@@ -70,16 +70,25 @@ jobs:
           UPDATE_TYPE="${{ steps.metadata.outputs.update-type }}"
           DEPENDENCY_TYPE="${{ steps.metadata.outputs.dependency-type }}"
           PACKAGE_ECOSYSTEM="${{ steps.metadata.outputs.package-ecosystem }}"
+          DEPENDENCY_NAMES="${{ steps.metadata.outputs.dependency-names }}"
           
           echo "Update type: $UPDATE_TYPE"
           echo "Dependency type: $DEPENDENCY_TYPE"
           echo "Package ecosystem: $PACKAGE_ECOSYSTEM"
+          echo "Dependencies: $DEPENDENCY_NAMES"
+          
+          # Check if this is a Fastify ecosystem update
+          FASTIFY_ECOSYSTEM=false
+          if [[ "$DEPENDENCY_NAMES" =~ fastify ]] || [[ "$DEPENDENCY_NAMES" =~ @fastify ]] || [[ "$DEPENDENCY_NAMES" =~ fastify-plugin ]]; then
+            FASTIFY_ECOSYSTEM=true
+          fi
           
           # Conditions for auto-merge:
           # 1. Patch updates for any dependency
           # 2. Minor updates for development dependencies
           # 3. All quality checks passed
           # 4. Tests passed
+          # 5. Fastify ecosystem major updates: NEVER auto-merge (require manual review)
           
           AUTO_MERGE=false
           
@@ -88,7 +97,11 @@ jobs:
              [[ "${{ steps.quality.outputs.build_check }}" == "passed" ]] && \
              [[ "${{ steps.tests.outputs.tests }}" == "passed" ]]; then
             
-            if [[ "$UPDATE_TYPE" == "version-update:semver-patch" ]]; then
+            # Never auto-merge Fastify ecosystem major updates
+            if [[ "$FASTIFY_ECOSYSTEM" == "true" ]] && [[ "$UPDATE_TYPE" == "version-update:semver-major" ]]; then
+              echo "⚠️ Auto-merge NOT approved: Fastify ecosystem major update requires manual review"
+              AUTO_MERGE=false
+            elif [[ "$UPDATE_TYPE" == "version-update:semver-patch" ]]; then
               echo "✅ Auto-merge approved: Patch update with passing checks"
               AUTO_MERGE=true
             elif [[ "$UPDATE_TYPE" == "version-update:semver-minor" ]] && [[ "$DEPENDENCY_TYPE" == "indirect" ]]; then

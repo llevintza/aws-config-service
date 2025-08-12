@@ -29,19 +29,29 @@ Our `.github/dependabot.yml` is configured with the following strategy:
    - TypeScript, ESLint, type definitions
    - Often need compatible versions
 
-4. **Testing Dependencies**
+4. **Fastify Ecosystem** (coordinated updates including majors)
+   - Core Fastify framework and all plugins
+   - Includes: `fastify`, `@fastify/*`, `fastify-plugin`
+   - Major versions grouped for compatibility testing
+   - **Special handling**: Major updates never auto-merge
+
+5. **Testing Dependencies**
    - Jest, testing types, test utilities
    - Isolated to avoid test suite disruption
 
-5. **Build Tools**
+6. **Build Tools**
    - Development and build-related packages
    - Lower impact on production code
 
 #### Ignored Packages
 - **Node.js**: Manual updates for major version changes
 - **Yarn**: Package manager updates require coordination
-- **Fastify**: Major versions need careful API review
-- **Winston**: Logging changes need validation
+- **Winston**: Major logging changes need validation
+
+#### Special Handling
+- **Fastify Ecosystem**: Major versions grouped but require manual review
+  - Includes all `@fastify/*` plugins and `fastify-plugin`
+  - Ensures API compatibility across the framework
 
 ### Auto-merge Strategy
 

@@ -1,72 +1,135 @@
 version: 2
 updates:
+  # Bi-weekly updates - All dependencies (Monday and Wednesday)
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "UTC"
+      interval: "cron"
+      cronjob: "0 9 * * 1,3" # Monday and Wednesday at 09:00 UTC
+      timezone: "Etc/UTC"
     labels:
       - "dependencies"
       - "dependabot"
+      - "bi-weekly-update"
     reviewers:
       - "llevintza"
     assignees:
       - "llevintza"
-    open-pull-requests-limit: 20
+    open-pull-requests-limit: 25 # Total limit for both days
     commit-message:
       prefix: "deps: "
       include: "scope"
-    # Enhanced grouping strategy
-    groups:
-      # Group all patch and minor updates together
-      minor-and-patch:
-        update-types:
-          - "minor"
-          - "patch"
-        exclude-patterns:
-          - "@aws-sdk/*" # AWS SDK updates separately due to potential breaking changes
 
-      # Group AWS SDK updates separately
-      aws-sdk:
+    # Strategic ecosystem grouping for all dependencies
+    groups:
+      # AWS ecosystem (all AWS-related packages)
+      aws-ecosystem:
         patterns:
           - "@aws-sdk/*"
+          - "aws-*"
+        update-types:
+          - "minor"
+          - "patch"
+          - "major" # AWS SDK major versions for coordinated updates
+
+      # Fastify ecosystem (core framework and plugins)
+      fastify-ecosystem:
+        patterns:
+          - "fastify"
+          - "@fastify/*"
+          - "fastify-plugin"
+        update-types:
+          - "minor"
+          - "patch"
+          - "major" # Include major versions for coordinated ecosystem updates
+
+      # Production logging and utilities
+      production-utilities:
+        patterns:
+          - "winston"
+          - "winston-*"
+          - "ajv"
         update-types:
           - "minor"
           - "patch"
 
-      # Group TypeScript and ESLint together (often need coordinated updates)
-      typescript-tooling:
+      # TypeScript ecosystem (language and type definitions)
+      typescript-ecosystem:
         patterns:
           - "typescript"
-          - "@typescript-eslint/*"
-          - "eslint*"
           - "@types/*"
+          - "ts-*"
         update-types:
           - "minor"
           - "patch"
+          - "major" # TypeScript major versions need coordinated updates
 
-      # Group testing dependencies
-      testing:
+      # Linting and formatting tools (code quality)
+      linting-and-formatting:
+        patterns:
+          - "eslint*"
+          - "@typescript-eslint/*"
+          - "prettier"
+          - "@eslint/*"
+          - "eslint-*"
+        update-types:
+          - "minor"
+          - "patch"
+          - "major" # Linting tools can have breaking config changes
+
+      # Testing ecosystem (Jest and testing utilities)
+      testing-ecosystem:
         patterns:
           - "jest"
+          - "@jest/*"
           - "@types/jest"
+          - "ts-jest"
           - "supertest"
           - "@types/supertest"
-          - "ts-jest"
+        update-types:
+          - "minor"
+          - "patch"
+          - "major" # Jest major versions for coordinated testing updates
+
+      # Build and development tools
+      build-and-dev-tools:
+        patterns:
+          - "concurrently"
+          - "nodemon"
+          - "husky"
+          - "lint-staged"
+          - "conventional-changelog-cli"
         update-types:
           - "minor"
           - "patch"
 
-      # Group build tools
-      build-tools:
+      # Semantic release ecosystem
+      semantic-release-tools:
         patterns:
+          - "semantic-release"
+          - "@semantic-release/*"
+          - "@commitlint/*"
+        update-types:
+          - "minor"
+          - "patch"
+          - "major" # Semantic release changes can affect workflow
+
+      # Node.js development ecosystem
+      nodejs-dev-ecosystem:
+        patterns:
+          - "@types/node"
           - "ts-node*"
-          - "nodemon"
-          - "concurrently"
-          - "husky"
-          - "lint-staged"
+          - "pino-pretty"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Utility packages
+      utilities:
+        patterns:
+          - "js-yaml"
+          - "@types/js-yaml"
+          - "license-checker"
         update-types:
           - "minor"
           - "patch"
@@ -75,7 +138,5 @@ updates:
     ignore:
       - dependency-name: "node" # Node.js version should be updated manually
       - dependency-name: "yarn" # Package manager version should be updated manually
-      - dependency-name: "fastify"
-        update-types: ["version-update:semver-major"] # Major Fastify updates need careful review
       - dependency-name: "winston"
         update-types: ["version-update:semver-major"] # Major logging changes need review
