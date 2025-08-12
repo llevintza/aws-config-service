@@ -18,6 +18,14 @@ on:
           - beta
           - alpha
 
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+  actions: read
+  checks: write
+  statuses: write
+
 env:
   NODE_VERSION: '22'
   REGISTRY: ghcr.io
@@ -40,11 +48,16 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@llevintza'
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -53,6 +66,7 @@ jobs:
         id: semantic
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ github.event.inputs.release_type }}" = "auto" ] || [ "${{ github.event_name }}" = "push" ]; then
             echo "Running automatic semantic release..."
