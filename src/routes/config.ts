@@ -90,7 +90,8 @@ export function configRoutes(fastify: FastifyInstance, _options: unknown, done: 
           return response;
         }
       } catch (error) {
-        request.log.error('Error retrieving configuration:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        request.log.error(`Error retrieving configuration: ${errorMessage}`);
         request.requestLogger.error('Error retrieving configuration', {
           event: 'business.config.error',
           config: {
@@ -133,7 +134,8 @@ export function configRoutes(fastify: FastifyInstance, _options: unknown, done: 
 
         return allConfigs;
       } catch (error) {
-        request.log.error('Error retrieving all configurations:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        request.log.error(`Error retrieving all configurations: ${errorMessage}`);
         request.requestLogger.error('Error retrieving all configurations', {
           event: 'business.config.get_all.error',
           error: {

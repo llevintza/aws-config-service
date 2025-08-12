@@ -113,7 +113,8 @@ const gracefulShutdown = async (signal: string): Promise<void> => {
 
     process.exit(0);
   } catch (err) {
-    server.log.error('❌ Error during graceful shutdown:', err);
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    server.log.error(`❌ Error during graceful shutdown: ${errorMessage}`);
     logger.error('❌ Error during graceful shutdown', { error: err });
     process.exit(1);
   }
@@ -125,14 +126,15 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-  server.log.fatal('Uncaught Exception:', err);
+  server.log.fatal(`Uncaught Exception: ${err.message}`);
   logger.error('Uncaught Exception', { error: err, stack: err.stack });
   process.exit(1);
 });
 
 // Handle unhandled rejections
 process.on('unhandledRejection', (reason, promise) => {
-  server.log.fatal('Unhandled Rejection at Promise:', promise, 'reason:', reason);
+  const reasonStr = reason instanceof Error ? reason.message : String(reason);
+  server.log.fatal(`Unhandled Rejection at Promise: ${reasonStr}`);
   logger.error('Unhandled Rejection', { reason, promise });
   process.exit(1);
 });
