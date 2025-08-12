@@ -15,7 +15,8 @@
         "chore",
         "ci",
         "build",
-        "revert"
+        "revert",
+        "deps"
       ]
     ],
     "type-case": [2, "always", "lower-case"],
