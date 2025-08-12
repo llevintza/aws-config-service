@@ -72,7 +72,25 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.release_type }}" = "auto" ] || [ "${{ github.event_name }}" = "push" ]; then
             echo "Running automatic semantic release..."
-            yarn run release
+            
+            # Add retry logic for API failures
+            for i in {1..3}; do
+              if yarn run release; then
+                echo "✅ Semantic release completed successfully"
+                break
+              else
+                echo "❌ Semantic release failed (attempt $i/3)"
+                if [ $i -eq 3 ]; then
+                  echo "All retry attempts failed"
+                  # Set outputs even on failure to prevent downstream job failures
+                  echo "new_release_published=false" >> $GITHUB_OUTPUT
+                  exit 1
+                fi
+                echo "Waiting 30 seconds before retry..."
+                sleep 30
+              fi
+            done
+            
           else
             echo "Running manual release with type: ${{ github.event.inputs.release_type }}"
             # For manual releases, we'll use the old method
