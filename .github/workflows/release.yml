@@ -18,8 +18,18 @@ on:
           - beta
           - alpha
 
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+  actions: read
+  checks: write
+  statuses: write
+
 env:
   NODE_VERSION: '22'
+  NPM_SCOPE: '@llevintza'
+  NPM_REGISTRY: 'https://npm.pkg.github.com'
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -40,11 +50,16 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
+          registry-url: ${{ env.NPM_REGISTRY }}
+          scope: ${{ env.NPM_SCOPE }}
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -53,6 +68,7 @@ jobs:
         id: semantic
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ github.event.inputs.release_type }}" = "auto" ] || [ "${{ github.event_name }}" = "push" ]; then
             echo "Running automatic semantic release..."
@@ -185,6 +201,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
