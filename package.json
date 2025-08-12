@@ -1,6 +1,6 @@
 {
   "name": "aws-config-service",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A simple but optimized REST api service that loads configurations for tenant, environment, cloud, service",
   "main": "dist/server.js",
   "packageManager": "yarn@1.22.19",

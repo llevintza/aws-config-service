@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/llevintza/aws-config-service/compare/v1.0.1...v1.0.2) (2025-08-12)
+
+
+### Bug Fixes
+
+* fix vulnerability scan  ([#29](https://github.com/llevintza/aws-config-service/issues/29)) ([0b6b480](https://github.com/llevintza/aws-config-service/commit/0b6b480ad29d8cb12ec532b5d1e9055a2bbe20b3))
+
 ## [1.0.1](https://github.com/llevintza/aws-config-service/compare/v1.0.0...v1.0.1) (2025-08-12)
 
 ### Bug Fixes
