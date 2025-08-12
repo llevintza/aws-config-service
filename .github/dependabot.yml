@@ -6,7 +6,7 @@ updates:
     schedule:
       interval: "cron"
       cronjob: "0 9 * * 1,3" # Monday and Wednesday at 09:00 UTC
-      timezone: "Etc/UTC"
+      timezone: "UTC"
     labels:
       - "dependencies"
       - "dependabot"
@@ -140,3 +140,124 @@ updates:
       - dependency-name: "yarn" # Package manager version should be updated manually
       - dependency-name: "winston"
         update-types: ["version-update:semver-major"] # Major logging changes need review
+
+  # Docker ecosystem - Base images and service containers
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "cron"
+      cronjob: "0 9 * * 1,3" # Monday and Wednesday at 09:00 UTC
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+      - "dependabot"
+      - "docker"
+    reviewers:
+      - "llevintza"
+    assignees:
+      - "llevintza"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "docker: "
+      include: "scope"
+
+    # Group Docker images by purpose
+    groups:
+      # Node.js base images
+      node-images:
+        patterns:
+          - "node"
+          - "node:*"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # AWS and Amazon services
+      aws-services:
+        patterns:
+          - "amazon/*"
+          - "aws/*"
+        update-types:
+          - "minor"
+          - "patch"
+          - "major"
+
+      # Development and admin tools
+      dev-tools:
+        patterns:
+          - "aaronshaf/*"
+        update-types:
+          - "minor"
+          - "patch"
+          - "major"
+
+    # Ignore major Node.js version updates (handle manually)
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions ecosystem - Action dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "cron"
+      cronjob: "0 9 * * 1,3" # Monday and Wednesday at 09:00 UTC
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+      - "dependabot"
+      - "github-actions"
+    reviewers:
+      - "llevintza"
+    assignees:
+      - "llevintza"
+    open-pull-requests-limit: 15
+    commit-message:
+      prefix: "ci: "
+      include: "scope"
+
+    # Group GitHub Actions by functionality
+    groups:
+      # Core GitHub Actions (checkout, setup, etc.)
+      core-actions:
+        patterns:
+          - "actions/checkout"
+          - "actions/setup-*"
+          - "actions/upload-*"
+          - "actions/download-*"
+          - "actions/github-script"
+        update-types:
+          - "minor"
+          - "patch"
+          - "major"
+
+      # Docker-related actions
+      docker-actions:
+        patterns:
+          - "docker/*"
+        update-types:
+          - "minor"
+          - "patch"
+          - "major"
+
+      # Security and analysis tools
+      security-actions:
+        patterns:
+          - "aquasecurity/*"
+          - "trufflesecurity/*"
+        update-types:
+          - "minor"
+          - "patch"
+          - "major"
+
+      # Third-party utility actions
+      utility-actions:
+        patterns:
+          - "amannn/*"
+          - "peter-evans/*"
+          - "softprops/*"
+          - "dependabot/*"
+        update-types:
+          - "minor"
+          - "patch"
+          - "major"
