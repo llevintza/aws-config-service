@@ -1,0 +1,166 @@
+name: Auto-Review My PRs
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+jobs:
+  auto-review:
+    name: Auto-review User PRs
+    runs-on: ubuntu-latest
+    # Only run for PRs created by you (replace 'llevintza' with your GitHub username if different)
+    if: github.actor == 'llevintza' && github.event.pull_request.draft == false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run quality checks
+        id: quality
+        continue-on-error: true
+        run: |
+          echo "Running quality checks..."
+          
+          # Type checking
+          yarn type-check
+          echo "type_check=passed" >> $GITHUB_OUTPUT
+          
+          # Linting
+          yarn lint:check
+          echo "lint_check=passed" >> $GITHUB_OUTPUT
+          
+          # Build test
+          yarn build
+          echo "build_check=passed" >> $GITHUB_OUTPUT
+          
+          echo "✅ All quality checks passed"
+
+      - name: Run tests
+        id: tests
+        continue-on-error: true
+        run: |
+          echo "Running test suite..."
+          yarn test
+          echo "tests=passed" >> $GITHUB_OUTPUT
+          echo "✅ Tests passed"
+
+      - name: Check for critical issues
+        id: security-check
+        continue-on-error: true
+        run: |
+          # Add any security or critical issue checks here
+          # For now, just check if there are any TODO/FIXME comments in critical files
+          CRITICAL_TODOS=$(grep -r "TODO\|FIXME" src/ --include="*.ts" | grep -i "critical\|security\|important" | wc -l)
+          
+          if [ "$CRITICAL_TODOS" -gt 0 ]; then
+            echo "❌ Found critical TODOs/FIXMEs that need attention"
+            echo "critical_issues=found" >> $GITHUB_OUTPUT
+          else
+            echo "✅ No critical issues found"
+            echo "critical_issues=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine if safe to auto-approve
+        id: auto-approve-decision
+        run: |
+          # Get PR information
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_BODY="${{ github.event.pull_request.body }}"
+          
+          echo "PR Title: $PR_TITLE"
+          
+          # Conditions for auto-approval:
+          # 1. All quality checks passed
+          # 2. Tests passed  
+          # 3. No critical issues found
+          # 4. PR doesn't contain certain keywords that require manual review
+          
+          AUTO_APPROVE=false
+          
+          # Check for keywords that should require manual review
+          REQUIRES_MANUAL_REVIEW=false
+          
+          if [[ "$PR_TITLE" =~ (BREAKING|breaking|major|security|auth|database|migration) ]] || \
+             [[ "$PR_BODY" =~ (BREAKING|breaking|major|security|auth|database|migration) ]]; then
+            echo "⚠️ PR contains keywords requiring manual review"
+            REQUIRES_MANUAL_REVIEW=true
+          fi
+          
+          # Check if all checks passed and no manual review required
+          if [[ "${{ steps.quality.outputs.type_check }}" == "passed" ]] && \
+             [[ "${{ steps.quality.outputs.lint_check }}" == "passed" ]] && \
+             [[ "${{ steps.quality.outputs.build_check }}" == "passed" ]] && \
+             [[ "${{ steps.tests.outputs.tests }}" == "passed" ]] && \
+             [[ "${{ steps.security-check.outputs.critical_issues }}" == "none" ]] && \
+             [[ "$REQUIRES_MANUAL_REVIEW" == "false" ]]; then
+            echo "✅ Auto-approval approved: All checks passed, no critical issues"
+            AUTO_APPROVE=true
+          else
+            echo "⚠️ Auto-approval not recommended: Manual review required"
+            AUTO_APPROVE=false
+          fi
+          
+          echo "auto_approve=$AUTO_APPROVE" >> $GITHUB_OUTPUT
+
+      - name: Auto-approve PR
+        if: steps.auto-approve-decision.outputs.auto_approve == 'true'
+        run: |
+          gh pr review --approve "${{ github.event.pull_request.number }}" --body "✅ **Auto-approved**: All quality checks passed
+
+          **Quality Checks**:
+          - ✅ Type Check: Passed
+          - ✅ Lint Check: Passed  
+          - ✅ Build Check: Passed
+          - ✅ Tests: Passed
+          - ✅ Security Check: No critical issues found
+          
+          This PR has been automatically approved as it meets all quality criteria and contains no breaking changes or security concerns."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add comment for manual review
+        if: steps.auto-approve-decision.outputs.auto_approve == 'false'
+        run: |
+          gh pr comment "${{ github.event.pull_request.number }}" --body "🔍 **Manual Review Required**
+
+          This PR requires manual review for one of the following reasons:
+          
+          **Quality Checks**:
+          - Type Check: ${{ steps.quality.outputs.type_check || 'failed' }}
+          - Lint Check: ${{ steps.quality.outputs.lint_check || 'failed' }}
+          - Build Check: ${{ steps.quality.outputs.build_check || 'failed' }}
+          - Tests: ${{ steps.tests.outputs.tests || 'failed' }}
+          - Critical Issues: ${{ steps.security-check.outputs.critical_issues || 'unknown' }}
+          
+          **Additional Reasons**:
+          - Contains keywords requiring manual review (BREAKING, security, database, etc.)
+          - Quality checks failed
+          - Critical TODOs/FIXMEs found
+          
+          Please review the changes and approve manually if appropriate."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge (optional)
+        if: steps.auto-approve-decision.outputs.auto_approve == 'true'
+        run: |
+          # Uncomment the following lines if you want to enable auto-merge after approval
+          # gh pr merge --auto --squash "${{ github.event.pull_request.number }}"
+          # echo "✅ Auto-merge enabled for PR #${{ github.event.pull_request.number }}"
+          echo "✅ PR approved. Auto-merge is disabled - you can merge manually when ready."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
