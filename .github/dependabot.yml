@@ -18,8 +18,64 @@ updates:
     commit-message:
       prefix: "deps: "
       include: "scope"
+    # Enhanced grouping strategy
     groups:
+      # Group all patch and minor updates together
       minor-and-patch:
         update-types:
           - "minor"
           - "patch"
+        exclude-patterns:
+          - "@aws-sdk/*" # AWS SDK updates separately due to potential breaking changes
+
+      # Group AWS SDK updates separately
+      aws-sdk:
+        patterns:
+          - "@aws-sdk/*"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Group TypeScript and ESLint together (often need coordinated updates)
+      typescript-tooling:
+        patterns:
+          - "typescript"
+          - "@typescript-eslint/*"
+          - "eslint*"
+          - "@types/*"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Group testing dependencies
+      testing:
+        patterns:
+          - "jest"
+          - "@types/jest"
+          - "supertest"
+          - "@types/supertest"
+          - "ts-jest"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Group build tools
+      build-tools:
+        patterns:
+          - "ts-node*"
+          - "nodemon"
+          - "concurrently"
+          - "husky"
+          - "lint-staged"
+        update-types:
+          - "minor"
+          - "patch"
+
+    # Ignore specific packages that require manual review
+    ignore:
+      - dependency-name: "node" # Node.js version should be updated manually
+      - dependency-name: "yarn" # Package manager version should be updated manually
+      - dependency-name: "fastify"
+        update-types: ["version-update:semver-major"] # Major Fastify updates need careful review
+      - dependency-name: "winston"
+        update-types: ["version-update:semver-major"] # Major logging changes need review
