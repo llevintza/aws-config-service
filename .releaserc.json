@@ -79,6 +79,10 @@
       "release": false
     },
     {
+      "type": "deps",
+      "release": false
+    },
+    {
       "type": "refactor",
       "release": "patch"
     },
