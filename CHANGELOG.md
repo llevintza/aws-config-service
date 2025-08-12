@@ -1,3 +1,16 @@
+## [1.0.3](https://github.com/llevintza/aws-config-service/compare/v1.0.2...v1.0.3) (2025-08-12)
+
+
+### Bug Fixes
+
+* add missing newline at end of package.json ([451e90e](https://github.com/llevintza/aws-config-service/commit/451e90e912017fdb3db6b7446760325d929910b7))
+* add missing newline at end of package.json ([56bf79d](https://github.com/llevintza/aws-config-service/commit/56bf79dfb2d94abbdaecef4bc36dcef30e2d36bb))
+* Implement code changes to enhance functionality and improve performance ([e227587](https://github.com/llevintza/aws-config-service/commit/e227587a4146f4043755a192c6c5066204a898d1))
+* Implement code changes to enhance functionality and improve performance ([5a1bd75](https://github.com/llevintza/aws-config-service/commit/5a1bd75e38ea736053fcb4b4b295172ce0e5330b))
+* update jest configuration and dependencies for improved compatibility ([f0c1081](https://github.com/llevintza/aws-config-service/commit/f0c1081cce8f584c7ff6f40d3a3a4eacdb5691f5))
+* update jest configuration and dependencies for improved compatibility ([5dd40a6](https://github.com/llevintza/aws-config-service/commit/5dd40a68426f9812450c5a1bdc60998bb9f734eb))
+* updated the yarn.lock file ([af16181](https://github.com/llevintza/aws-config-service/commit/af1618171fffde75315af2a77e7514c4cce9ea74))
+
 ## [1.0.2](https://github.com/llevintza/aws-config-service/compare/v1.0.1...v1.0.2) (2025-08-12)
 
 ### Bug Fixes
