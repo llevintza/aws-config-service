@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/llevintza/aws-config-service/compare/v1.0.0...v1.0.1) (2025-08-12)
+
+
+### Bug Fixes
+
+* Add retry logic for semantic release and update changelog configuration ([#28](https://github.com/llevintza/aws-config-service/issues/28)) ([78fedc0](https://github.com/llevintza/aws-config-service/commit/78fedc0b2cb346738f4166f9ad12c6493f38ecfd))
+
 # 1.0.0 (2025-08-12)
 
 ### Bug Fixes
