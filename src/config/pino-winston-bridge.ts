@@ -1,4 +1,4 @@
-import { pino, stdSerializers } from 'pino';
+import pino, { stdSerializers } from 'pino';
 
 import logger from './logger';
 
