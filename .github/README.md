@@ -1,232 +1,214 @@
-# CI/CD Pipeline Documentation
+# AWS Config Service
 
-## Overview
+> 🚀 A high-performance REST API service for managing tenant-specific configurations across cloud environments and services.
 
-This repository uses GitHub Actions for comprehensive CI/CD automation. The pipeline includes multiple workflows designed to ensure code quality, security, and reliable deployments.
+## 📊 Project Status
 
-## Workflows
+![Build Status](../../actions/workflows/ci.yml/badge.svg)
+![Security Scan](../../actions/workflows/security.yml/badge.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-### 1. CI Pipeline (`ci.yml`)
+## 🎯 What This Service Does
 
-**Triggers:** Push to any branch, Pull requests to `main` or `develop`
+Think of this service as a **centralized configuration management hub** for multi-tenant cloud applications. Just like how a master control panel manages settings for different buildings in a complex, this service manages configurations for different tenants, cloud regions, and services through a simple, well-documented REST API.
 
-**Jobs:**
+### Why It Matters
 
-- **Code Quality & Security**: TypeScript checking, ESLint, Prettier, security audits
-- **Build & Test**: Multi-node version testing (16, 18, 20), DynamoDB integration
-- **Docker Build & Security Scan**: Container building with Trivy vulnerability scanning
-- **Dependency Check**: Security vulnerability assessment
-- **Performance Testing**: Load testing with Artillery (on labeled PRs)
-- **Integration Tests**: End-to-end testing with real services
-- **Artifacts Generation**: Build artifacts for deployment
-- **Notifications**: Status reporting
+In modern cloud environments, managing configurations across multiple tenants and regions can become chaotic. This service brings order by:
+- **Centralizing** all configuration data in one place
+- **Organizing** configurations by tenant, region, and service
+- **Providing** fast, reliable access through a REST API
+- **Ensuring** consistency across your entire infrastructure
 
-### 2. Pull Request Checks (`pr-checks.yml`)
+## ✨ Key Features
 
-**Triggers:** Pull requests to `main` branch
+- **🚀 High Performance** - Built with Fastify for optimal throughput
+- **🏢 Multi-Tenant Support** - Isolated configurations per tenant
+- **☁️ Cloud-Native Design** - Docker-ready with health monitoring
+- **📚 Self-Documenting** - Interactive Swagger UI for API exploration
+- **🔧 Developer-Friendly** - Hot reload, debugging, and comprehensive tooling
+- **🛡️ Production-Ready** - Health checks, logging, and monitoring built-in
 
-**Enhanced validations:**
+## 🚀 Quick Start
 
-- **PR Validation**: Semantic PR titles, commit message format, PR size analysis
-- **Quality Gate**: Strict linting, formatting, complexity analysis
-- **Security & Compliance**: Vulnerability scanning, secret detection, license compliance
-- **Build & Test Validation**: Comprehensive build and test execution
-- **Documentation**: README completeness, API documentation validation
-- **Performance Impact**: Performance testing for critical changes
-- **Status Summary**: Automated PR comments with results
+### Prerequisites
 
-### 3. Release Pipeline (`release.yml`)
+Before you begin, ensure you have:
+- **Node.js 22+** (the JavaScript runtime)
+- **Yarn** (package manager - faster than npm)
+- **Docker** (for containerization - optional but recommended)
 
-**Triggers:** Push to `main`, Manual workflow dispatch
+### Get Running in 3 Steps
 
-**Production-ready features:**
+1. **Clone and setup the project:**
+   ```bash
+   git clone https://github.com/llevintza/aws-config-service.git
+   cd aws-config-service
+   ./scripts/setup/setup.sh  # Automated setup script
+   ```
 
-- **Automated Versioning**: Semantic version bumping with changelog generation
-- **Production Build**: Optimized builds with artifact generation
-- **Docker Registry**: Multi-platform container builds (amd64, arm64)
-- **Security Scanning**: Production-grade vulnerability assessment
-- **Staging Deployment**: Automated staging environment deployment
-- **Performance Benchmarking**: Production performance validation
-- **GitHub Releases**: Automated release creation with artifacts
+2. **Start development mode:**
+   ```bash
+   yarn dev  # Starts with hot reload
+   ```
 
-### 4. Dependency Management (`dependencies.yml`)
+3. **Explore the API:**
+   - **Interactive Documentation**: http://localhost:3000/docs
+   - **Health Check**: http://localhost:3000/health
+   - **Sample API Call**: http://localhost:3000/config/tenant1/cloud/us-east-1/service/api-gateway/config/rate-limit
 
-**Triggers:** Weekly schedule (Mondays 9 AM UTC), Manual dispatch
+## 🏗️ Architecture at a Glance
 
-**Automated maintenance:**
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   API Gateway   │───▶│  Config Service  │───▶│  Configuration  │
+│   (Fastify)     │    │   (Business)     │    │     Store       │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+   • Request Routing      • Data Validation        • File System
+   • Input Validation     • Business Logic         • DynamoDB
+   • API Documentation    • Response Formatting    • Hybrid Mode
+```
 
-- **Dependency Auditing**: Weekly outdated package reports
-- **Security Monitoring**: Vulnerability tracking and alerting
-- **Safe Auto-updates**: Automated patch/minor version updates
-- **License Compliance**: License compatibility verification
-- **Issue Creation**: Automated dependency update issues
+**Think of it as three layers working together:**
+- **Front Door (API Layer)**: Handles incoming requests and validates them
+- **Brain (Service Layer)**: Processes business logic and data transformation
+- **Storage (Data Layer)**: Flexible backends (files, DynamoDB, or both)
 
-## Configuration
+## 🛠️ Development Setup
 
-### Required Secrets
+### For First-Time Contributors
 
+1. **Fork the repository** on GitHub
+2. **Clone your fork locally:**
+   ```bash
+   git clone https://github.com/YOUR-USERNAME/aws-config-service.git
+   cd aws-config-service
+   ```
+
+3. **Run the automated setup:**
+   ```bash
+   ./scripts/setup/setup.sh
+   ```
+   This script will:
+   - Check all prerequisites
+   - Install dependencies
+   - Set up development environment
+   - Run initial tests
+
+4. **Start developing:**
+   ```bash
+   yarn dev        # Development with hot reload
+   yarn test       # Run tests
+   yarn build      # Production build
+   ```
+
+### Code Quality Tools
+
+We maintain high code quality with automated tools:
+- **TypeScript** for type safety
+- **ESLint** for code standards
+- **Prettier** for consistent formatting
+- **Jest** for testing
+- **Husky** for pre-commit hooks
+
+## 🧭 Project Navigation
+
+### Core Directories
+```
+aws-config-service/
+├── src/                    # Main source code
+│   ├── routes/            # API endpoint definitions
+│   ├── services/          # Business logic layer
+│   ├── config/            # Configuration management
+│   └── types/             # TypeScript type definitions
+├── data/                  # Sample configuration data
+├── docs/                  # Detailed documentation
+├── scripts/               # Development & deployment utilities
+└── __tests__/             # Test suites
+```
+
+### Essential Files
+- `package.json` - Dependencies and scripts
+- `tsconfig.json` - TypeScript configuration
+- `docker-compose.yml` - Local development with Docker
+- `jest.config.js` - Testing configuration
+
+## 📚 Documentation Hub
+
+### 🚀 Getting Started
+- **[Contributor Setup](../docs/CONTRIBUTOR_SETUP.md)** - Complete setup guide for new contributors
+- **[Development Workflow](../docs/SERVICE_MANAGEMENT.md)** - Day-to-day development practices
+
+### 🏗️ Architecture & Design
+- **[System Architecture](../docs/DESIGN_PATTERNS.md)** - Design decisions and architectural patterns
+
+### 🛠️ Development
+- **[Testing Guide](../docs/TESTING_COMMANDS.md)** - Comprehensive testing strategies
+- **[Debugging](../docs/DEBUGGING.md)** - Debug configurations and troubleshooting
+- **[Docker Guide](../docs/DOCKER_GUIDE.md)** - Container development and deployment
+- **[Scripts Reference](../docs/SCRIPTS_REFERENCE.md)** - All available commands and utilities
+
+### 🚀 DevOps & Deployment
+- **[CI/CD Pipeline](../docs/CI_CD_PIPELINE.md)** - Automated workflows and deployment
+- **[Database Setup](../docs/DYNAMODB_SETUP.md)** - DynamoDB configuration and management
+- **[Security Guidelines](../docs/SECURITY_SCANNING_FIX.md)** - Security practices and tools
+
+## 🤝 Contributing
+
+We welcome contributions from developers of all experience levels! Here's how to get involved:
+
+### 🎯 Ways to Contribute
+- **Bug Reports**: Found something broken? Open an issue!
+- **Feature Requests**: Have an idea? We'd love to hear it!
+- **Code Contributions**: Fix bugs, add features, improve documentation
+- **Documentation**: Help make our docs even better
+
+### 🚀 Contribution Process
+1. **Read the [Contributor Setup Guide](../docs/CONTRIBUTOR_SETUP.md)**
+2. **Fork the repository and create a feature branch**
+3. **Make your changes with tests**
+4. **Submit a pull request with a clear description**
+
+### 📋 Before You Submit
+- ✅ All tests pass (`yarn test`)
+- ✅ Code follows our style guide (`yarn lint`)
+- ✅ Documentation is updated if needed
+- ✅ Commit messages are clear and descriptive
+
+## 🆘 Need Help?
+
+### 💬 Getting Support
+- **📖 Documentation**: Start with the `../docs/` folder for detailed guides
+- **🐛 Issues**: [Create a GitHub issue](../../issues) for bugs or questions
+- **💡 Discussions**: [Join our discussions](../../discussions) for ideas and help
+- **⚡ Quick Status**: Run `yarn status` to check service health
+
+### 🔧 Common Tasks
 ```bash
-# GitHub Token (automatically provided)
-GITHUB_TOKEN
+# Check if everything is working
+yarn status
 
-# Optional: For enhanced notifications
-SLACK_WEBHOOK_URL
-TEAMS_WEBHOOK_URL
+# Run all quality checks
+yarn lint && yarn test && yarn build
+
+# Clean install (if you have issues)
+rm -rf node_modules yarn.lock && yarn install
+
+# Docker development
+yarn docker:up    # Start all services
+yarn docker:down  # Stop all services
 ```
 
-### Environment Variables
+### Recent Activity
+- ✅ **CI/CD Pipeline**: Fully automated testing and deployment
+- ✅ **Security Scanning**: Regular vulnerability assessments
+- ✅ **Documentation**: Comprehensive guides for all contributors
+- 🔄 **Active Development**: Regular updates and improvements
 
-```yaml
-NODE_VERSION: '18' # Primary Node.js version
-YARN_CACHE_FOLDER: ~/.yarn # Yarn cache location
-REGISTRY: ghcr.io # Container registry
-```
+---
 
-### Branch Protection Rules
+**Ready to contribute?** Start with our [Contributor Setup Guide](../docs/CONTRIBUTOR_SETUP.md) and join our growing community of developers! 
 
-Recommended settings for `main` branch:
-
-- Require pull request reviews (2 reviewers)
-- Require status checks:
-  - `PR Validation`
-  - `Code Quality & Security`
-  - `Build & Test Validation`
-  - `Security & Compliance`
-- Require up-to-date branches
-- Include administrators
-
-## Quality Gates
-
-### Code Quality Standards
-
-- **TypeScript**: Strict type checking with zero errors
-- **ESLint**: Maximum 0 errors, warnings under 10
-- **Prettier**: Consistent code formatting
-- **Test Coverage**: Minimum 80% (when tests are implemented)
-
-### Security Standards
-
-- **Vulnerabilities**: Zero critical, minimal high-severity
-- **Dependencies**: Regular updates, license compliance
-- **Secrets**: No hardcoded secrets or credentials
-- **Container Security**: Regular base image updates
-
-### Performance Standards
-
-- **Build Time**: Under 5 minutes for standard builds
-- **API Response**: 95th percentile under 100ms
-- **Memory Usage**: Optimized for production workloads
-
-## Labels for Enhanced Workflows
-
-Add these labels to enable special workflow behaviors:
-
-- `performance-test`: Triggers performance testing in CI
-- `performance-critical`: Enables performance impact assessment in PRs
-- `dependencies`: Marks dependency-related issues/PRs
-- `security`: Highlights security-related changes
-- `breaking-change`: Indicates breaking API changes
-
-## Monitoring and Alerts
-
-### Workflow Notifications
-
-- ✅ Success: All checks passed
-- ⚠️ Warning: Non-critical issues found
-- ❌ Failure: Critical issues requiring attention
-
-### Automated Issues
-
-- Weekly dependency updates
-- Security vulnerability alerts
-- Performance regression reports
-
-## Local Development
-
-### Pre-commit Hooks
-
-```bash
-# Install pre-commit hooks
-yarn prepare
-
-# Run quality checks locally
-yarn lint:check
-yarn format:check
-yarn type-check
-yarn build
-```
-
-### Testing CI Changes
-
-```bash
-# Validate GitHub Actions syntax
-act --list  # Requires act CLI tool
-
-# Test specific workflow
-act push --job code-quality
-```
-
-## Deployment Environments
-
-### Staging
-
-- **Trigger**: Automatic on `main` branch push
-- **URL**: `https://staging.your-domain.com`
-- **Database**: Staging DynamoDB instance
-- **Monitoring**: Basic health checks
-
-### Production
-
-- **Trigger**: Manual release workflow
-- **URL**: `https://your-domain.com`
-- **Database**: Production DynamoDB
-- **Monitoring**: Full observability stack
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Build Failures**
-   - Check Node.js version compatibility
-   - Verify dependency installation
-   - Review TypeScript compilation errors
-
-2. **Test Failures**
-   - Ensure DynamoDB service is running
-   - Check test data setup
-   - Verify environment variables
-
-3. **Security Scan Failures**
-   - Update vulnerable dependencies
-   - Review Dockerfile for security best practices
-   - Check for hardcoded secrets
-
-4. **Performance Issues**
-   - Profile application performance
-   - Optimize database queries
-   - Review memory usage patterns
-
-### Getting Help
-
-- Check workflow logs in GitHub Actions tab
-- Review this documentation
-- Contact the development team for support
-
-## Future Enhancements
-
-### Planned Improvements
-
-- [ ] Integration with SonarCloud for code quality metrics
-- [ ] Automated security patching with Dependabot
-- [ ] Blue-green deployment strategy
-- [ ] Chaos engineering tests
-- [ ] Multi-region deployment support
-
-### Contributing
-
-When adding new workflows or modifying existing ones:
-
-1. Test changes in a feature branch
-2. Update this documentation
-3. Add appropriate error handling
-4. Include relevant security considerations
+*For detailed technical information, architecture decisions, and advanced usage, explore the comprehensive documentation in the [`../docs/`](../docs/) folder.*
