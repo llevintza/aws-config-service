@@ -26,6 +26,7 @@ This service provides a centralized, scalable solution for configuration managem
 ### Get Started in 3 Steps
 
 1. **Clone and setup:**
+
    ```bash
    git clone <repository-url>
    cd aws-config-service
@@ -33,6 +34,7 @@ This service provides a centralized, scalable solution for configuration managem
    ```
 
 2. **Start development:**
+
    ```bash
    yarn dev
    ```
@@ -44,11 +46,13 @@ This service provides a centralized, scalable solution for configuration managem
 ## 🏗️ API Overview
 
 ### Primary Endpoint
+
 ```
 GET /config/{tenant}/cloud/{cloudRegion}/service/{service}/config/{configName}
 ```
 
 ### Example Response
+
 ```json
 {
   "tenant": "tenant1",
@@ -65,6 +69,7 @@ GET /config/{tenant}/cloud/{cloudRegion}/service/{service}/config/{configName}
 ```
 
 ### Additional Endpoints
+
 - `GET /health` - Service health status
 - `GET /config` - List all configurations
 - `GET /docs` - Interactive API documentation
@@ -84,6 +89,7 @@ GET /config/{tenant}/cloud/{cloudRegion}/service/{service}/config/{configName}
 ```
 
 The service follows a clean architecture pattern with clear separation of concerns:
+
 - **API Layer**: Request handling and validation
 - **Service Layer**: Business logic and data transformation
 - **Data Layer**: Flexible storage backends (file, DynamoDB, or hybrid)
@@ -91,6 +97,7 @@ The service follows a clean architecture pattern with clear separation of concer
 ## 🛠️ Development
 
 ### Local Development
+
 ```bash
 # Development with hot reload
 yarn dev
@@ -103,6 +110,7 @@ yarn build && yarn start
 ```
 
 ### Testing
+
 ```bash
 # Run all tests
 yarn test
@@ -115,6 +123,7 @@ yarn test:integration
 ```
 
 ### Docker Development
+
 ```bash
 # Build and run with Docker Compose
 yarn docker:up
@@ -141,12 +150,14 @@ aws-config-service/
 ## 📚 Documentation
 
 ### For Contributors
+
 - **[Getting Started](docs/CONTRIBUTOR_SETUP.md)** - Detailed setup instructions
 - **[Development Guide](docs/SERVICE_MANAGEMENT.md)** - Running and managing the service
 - **[Debugging](docs/DEBUGGING.md)** - Debug configurations and troubleshooting
 - **[Testing](docs/TESTING_COMMANDS.md)** - Comprehensive testing guide
 
 ### For Architects & DevOps
+
 - **[Design Patterns](docs/DESIGN_PATTERNS.md)** - Architecture decisions and patterns
 - **[Project Structure](docs/PROJECT_STRUCTURE.md)** - Detailed codebase organization
 - **[Database Setup](docs/DYNAMODB_SETUP.md)** - DynamoDB configuration
@@ -154,6 +165,7 @@ aws-config-service/
 - **[Security](docs/SECURITY_SCANNING_FIX.md)** - Security scanning and fixes
 
 ### For Operations
+
 - **[Docker Guide](docs/DOCKER_GUIDE.md)** - Container deployment and management
 - **[Scripts Reference](docs/SCRIPTS_REFERENCE.md)** - All available commands and scripts
 - **[Dependency Management](docs/DEPENDENCY_MANAGEMENT.md)** - Managing project dependencies
@@ -162,6 +174,7 @@ aws-config-service/
 ## 🤝 Contributing
 
 We welcome contributions! Please check our [Contributor Setup Guide](docs/CONTRIBUTOR_SETUP.md) for detailed instructions on:
+
 - Setting up your development environment
 - Code quality standards and tools
 - Testing requirements
@@ -179,4 +192,4 @@ We welcome contributions! Please check our [Contributor Setup Guide](docs/CONTRI
 
 ---
 
-*For detailed technical information, architecture decisions, and advanced usage, please refer to the documentation in the `docs/` folder.*
+_For detailed technical information, architecture decisions, and advanced usage, please refer to the documentation in the `docs/` folder._
