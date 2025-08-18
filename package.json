@@ -121,7 +121,7 @@
     "nodemon": "^3.0.2",
     "pino-pretty": "^13.1.1",
     "prettier": "^3.1.0",
-    "semantic-release": "^23.0.2",
+    "semantic-release": "^24.2.7",
     "string-width": "4.2.3",
     "strip-ansi": "6.0.1",
     "supertest": "^7.1.4",
