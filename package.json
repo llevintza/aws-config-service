@@ -99,7 +99,7 @@
     "@swc/register": "0.1.10",
     "@types/jest": "29.5.12",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "24.2.1",
+    "@types/node": "24.3.0",
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
