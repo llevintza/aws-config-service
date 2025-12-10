@@ -994,10 +994,10 @@
     ajv-formats "^3.0.1"
     fast-uri "^3.0.0"
 
-"@fastify/cors@^11.1.0":
-  version "11.1.0"
-  resolved "https://registry.yarnpkg.com/@fastify/cors/-/cors-11.1.0.tgz#09f79748f08f147d19cfc3f1807b59791bc77cf0"
-  integrity sha512-sUw8ed8wP2SouWZTIbA7V2OQtMNpLj2W6qJOYhNdcmINTu6gsxVYXjQiM9mdi8UUDlcoDDJ/W2syPo1WB2QjYA==
+"@fastify/cors@^11.2.0":
+  version "11.2.0"
+  resolved "https://registry.yarnpkg.com/@fastify/cors/-/cors-11.2.0.tgz#82c47aff9bd7dfd40ac0a66fcd87a034113dcdd8"
+  integrity sha512-LbLHBuSAdGdSFZYTLVA3+Ch2t+sA6nq3Ejc6XLAKiQ6ViS2qFnvicpj0htsx03FyYeLs04HfRNBsz/a8SvbcUw==
   dependencies:
     fastify-plugin "^5.0.0"
     toad-cache "^3.7.0"
@@ -1068,10 +1068,10 @@
     rfdc "^1.3.1"
     yaml "^2.4.1"
 
-"@fastify/swagger@^9.5.1":
-  version "9.5.1"
-  resolved "https://registry.yarnpkg.com/@fastify/swagger/-/swagger-9.5.1.tgz#8ec9e2e6e8390a674cf3da9f339c9e59466e46fa"
-  integrity sha512-EGjYLA7vDmCPK7XViAYMF6y4+K3XUy5soVTVxsyXolNe/Svb4nFQxvtuQvvoQb2Gzc9pxiF3+ZQN/iZDHhKtTg==
+"@fastify/swagger@^9.6.1":
+  version "9.6.1"
+  resolved "https://registry.yarnpkg.com/@fastify/swagger/-/swagger-9.6.1.tgz#7fa6ed07dfedd7694c51cb84c42b463af98201b5"
+  integrity sha512-fKlpJqFMWoi4H3EdUkDaMteEYRCfQMEkK0HJJ0eaf4aRlKd8cbq0pVkOfXDXmtvMTXYcnx3E+l023eFDBsA1HA==
   dependencies:
     fastify-plugin "^5.0.0"
     json-schema-resolver "^3.0.0"
@@ -1698,6 +1698,11 @@
   integrity sha512-ZOBkgDwEdoYVlSeRbYYXs0S9MejQofiVYoTbKzy/6GQa39/q5tQU2IX46+shYnUkpEl3wc+J6wRlar7r2EK2xA==
   dependencies:
     "@noble/hashes" "^1.1.5"
+
+"@pinojs/redact@^0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@pinojs/redact/-/redact-0.4.0.tgz#c3de060dd12640dcc838516aa2a6803cc7b2e9d6"
+  integrity sha512-k2ENnmBugE/rzQfEcdWHcCY+/FM3VLzH9cYEsbdsoqrvzAKRhUZeRNhAZvB8OitQJ1TBed3yqWtdjzS6wJKBwg==
 
 "@pkgjs/parseargs@^0.11.0":
   version "0.11.0"
@@ -4680,11 +4685,6 @@ fast-querystring@^1.0.0:
   dependencies:
     fast-decode-uri-component "^1.0.1"
 
-fast-redact@^3.1.1:
-  version "3.5.0"
-  resolved "https://registry.yarnpkg.com/fast-redact/-/fast-redact-3.5.0.tgz#e9ea02f7e57d0cd8438180083e93077e496285e4"
-  integrity sha512-dwsoQlS7h9hMeYUq1W++23NDcBLV4KqONnITDV9DjfS3q1SgDGVrBdvvTLUotWtPSD7asWDV9/CmsZPy8Hf70A==
-
 fast-safe-stringify@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/fast-safe-stringify/-/fast-safe-stringify-2.1.1.tgz#c406a83b6e70d9e35ce3b30a81141df30aeba884"
@@ -4707,15 +4707,15 @@ fastest-levenshtein@^1.0.16:
   resolved "https://registry.yarnpkg.com/fastest-levenshtein/-/fastest-levenshtein-1.0.16.tgz#210e61b6ff181de91ea9b3d1b84fdedd47e034e5"
   integrity sha512-eRnCtTTtGZFpQCwhJiUOuxPQWRXVKYDn0b2PeHfXL6/Zi53SLAzAHfVhVWK2AryC/WH05kGfxhFIPvTF0SXQzg==
 
-fastify-plugin@5.0.1, fastify-plugin@^5.0.0:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/fastify-plugin/-/fastify-plugin-5.0.1.tgz#82d44e6fe34d1420bb5a4f7bee434d501e41939f"
-  integrity sha512-HCxs+YnRaWzCl+cWRYFnHmeRFyR5GVnJTAaCJQiYzQSDwK9MgJdyAsuL3nh0EWRCYMgQ5MeziymvmAhUHYHDUQ==
+fastify-plugin@5.1.0, fastify-plugin@^5.0.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/fastify-plugin/-/fastify-plugin-5.1.0.tgz#7083e039d6418415f9a669f8c25e72fc5bf2d3e7"
+  integrity sha512-FAIDA8eovSt5qcDgcBvDuX/v0Cjz0ohGhENZ/wpc3y+oZCY2afZ9Baqql3g/lC+OHRnciQol4ww7tuthOb9idw==
 
-fastify@^5.5.0:
-  version "5.5.0"
-  resolved "https://registry.yarnpkg.com/fastify/-/fastify-5.5.0.tgz#a1cf7bbfad7e4021f042e6f78942d3c3dd511a5d"
-  integrity sha512-ZWSWlzj3K/DcULCnCjEiC2zn2FBPdlZsSA/pnPa/dbUfLvxkD/Nqmb0XXMXLrWkeM4uQPUvjdJpwtXmTfriXqw==
+fastify@^5.6.2:
+  version "5.6.2"
+  resolved "https://registry.yarnpkg.com/fastify/-/fastify-5.6.2.tgz#e9bd80c869f54440f62f539d646b1c303b56c40f"
+  integrity sha512-dPugdGnsvYkBlENLhCgX8yhyGCsCPrpA8lFWbTNU428l+YOnLgYHR69hzV8HWPC79n536EqzqQtvhtdaCE0dKg==
   dependencies:
     "@fastify/ajv-compiler" "^4.0.0"
     "@fastify/error" "^4.0.0"
@@ -4726,7 +4726,7 @@ fastify@^5.5.0:
     fast-json-stringify "^6.0.0"
     find-my-way "^9.0.0"
     light-my-request "^6.0.0"
-    pino "^9.0.0"
+    pino "^10.1.0"
     process-warning "^5.0.0"
     rfdc "^1.3.1"
     secure-json-parse "^4.0.0"
@@ -7815,13 +7815,13 @@ pino-std-serializers@^7.0.0:
   resolved "https://registry.yarnpkg.com/pino-std-serializers/-/pino-std-serializers-7.0.0.tgz#7c625038b13718dbbd84ab446bd673dc52259e3b"
   integrity sha512-e906FRY0+tV27iq4juKzSYPbUj2do2X2JX4EzSca1631EB2QJQUqGbDuERal7LCtOpxl6x3+nvo9NPZcmjkiFA==
 
-pino@^9.0.0:
-  version "9.8.0"
-  resolved "https://registry.yarnpkg.com/pino/-/pino-9.8.0.tgz#8730b8ff2e1b94ef3691666ee067f7352fef1de8"
-  integrity sha512-L5+rV1wL7vGAcxXP7sPpN5lrJ07Piruka6ArXr7EWBXxdVWjJshGVX8suFsiusJVcGKDGUFfbgbnKdg+VAC+0g==
+pino@^10.1.0:
+  version "10.1.0"
+  resolved "https://registry.yarnpkg.com/pino/-/pino-10.1.0.tgz#eb2a8a5b509fe4c75643ccec30461ea24766003a"
+  integrity sha512-0zZC2ygfdqvqK8zJIr1e+wT1T/L+LF6qvqvbzEQ6tiMAoTqEVK9a1K3YRu8HEUvGEvNqZyPJTtb2sNIoTkB83w==
   dependencies:
+    "@pinojs/redact" "^0.4.0"
     atomic-sleep "^1.0.0"
-    fast-redact "^3.1.1"
     on-exit-leak-free "^2.1.0"
     pino-abstract-transport "^2.0.0"
     pino-std-serializers "^7.0.0"
