@@ -95,7 +95,7 @@
     "@commitlint/config-conventional": "^19.5.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
-    "@swc/core": "1.13.3",
+    "@swc/core": "1.15.10",
     "@swc/register": "0.1.10",
     "@types/jest": "29.5.12",
     "@types/js-yaml": "^4.0.9",
